@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "timestamp": "2026-11-06T23:41:46.560226Z",
+  "application_version": "1.2.0",
+  "build": "1",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "mode": "SIMULATED",
+  "software_readiness": "PASS",
+  "pcsc_available": true,
+  "reader_name": "Rocketek CSCR3 SIMULATED",
+  "reader_detected": true,
+  "reader_names": [
+    "Rocketek CSCR3 SIMULATED"
+  ],
+  "card_detected": true,
+  "atr": "3B0000",
+  "aid_candidates": [
+    {
+      "aid": "D4534C504D4401",
+      "source": "PC/SC / Cardpeek"
+    },
+    {
+      "aid": "D4534C504D44",
+      "source": "Android Card Bridge"
+    }
+  ],
+  "select_attempts": [
+    {
+      "aid": "D4534C504D4401",
+      "source": "PC/SC / Cardpeek",
+      "select_apdu": "00A4040007D4534C504D4401",
+      "response_data": "",
+      "sw1": "90",
+      "sw2": "00",
+      "sw1sw2": "9000",
+      "result": "APPLET_SELECTED"
+    },
+    {
+      "aid": "D4534C504D44",
+      "source": "Android Card Bridge",
+      "select_apdu": "00A4040006D4534C504D44",
+      "response_data": "",
+      "sw1": "6A",
+      "sw2": "82",
+      "sw1sw2": "6A82",
+      "result": "APPLET_NOT_FOUND"
+    }
+  ],
+  "selected_aid": null,
+  "simulated_selected_aid": "D4534C504D4401",
+  "result": "SIMULATED_MATCH",
+  "physical_validation": "NOT_EXECUTED",
+  "disconnect_clean": true
+}

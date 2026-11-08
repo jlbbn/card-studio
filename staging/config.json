@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "environment": "STAGING_ISOLATED",
+  "production": false,
+  "network": "card-p4-staging-net",
+  "database": "card_p4_staging",
+  "services": {
+    "sunmi-pos": {"port": 5300, "revision": "rc1-001"},
+    "tesoreria": {"port": 5301, "revision": "rc1-001"},
+    "swiftledger": {"port": 5000, "revision": "rc1-001"}
+  },
+  "postgres": {"port": 5432, "version": "16.15"},
+  "service_secret_reference": "env:P4_SERVICE_SECRET",
+  "database_secret_reference": "env:P4_DB_PASSWORD",
+  "external_endpoints": [],
+  "physical_validation": false,
+  "monetary_operations": false,
+  "data_classification": "SYNTHETIC_ONLY"
+}

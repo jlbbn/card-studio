@@ -1,0 +1,42 @@
+{
+  "application_reconnect": "PASS",
+  "events": [
+    {
+      "elapsed_seconds": 0.129491,
+      "event": "BACKUP_VERIFIED",
+      "exists": true,
+      "snapshot": "PG_DUMP_CUSTOM",
+      "timestamp": "2026-11-08T20:21:17.389034Z"
+    },
+    {
+      "destination": "card_p4_restore",
+      "elapsed_seconds": 0.433013,
+      "event": "RESTORE_COMPLETE",
+      "isolated": true,
+      "timestamp": "2026-11-08T20:21:17.692561Z"
+    },
+    {
+      "duplicate_created": false,
+      "effects": 219,
+      "elapsed_seconds": 1.024989,
+      "event": "VERIFICATION_COMPLETE",
+      "operations": 219,
+      "state": "APPROVED",
+      "timestamp": "2026-11-08T20:21:18.284545Z"
+    }
+  ],
+  "isolated": true,
+  "post_backup_item_absent_as_expected": true,
+  "production_restore": false,
+  "restore_seconds": 0.433013,
+  "restored_integrity": {
+    "duplicate_created": false,
+    "effects": 219,
+    "operations": 219,
+    "state": "APPROVED"
+  },
+  "rpo_seconds": 0.134282,
+  "rto_seconds": 1.024989,
+  "started_at": "2026-11-08T20:21:17.259563Z",
+  "status": "PASS"
+}

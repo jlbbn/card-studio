@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "timestamp": "2026-11-06T23:25:52.490922Z",
+  "application_version": "1.2.0",
+  "build": "1",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "mode": "PHYSICAL",
+  "software_readiness": "PASS",
+  "pcsc_available": true,
+  "reader_name": null,
+  "reader_detected": false,
+  "reader_names": [],
+  "card_detected": false,
+  "atr": null,
+  "aid_candidates": [
+    {
+      "aid": "D4534C504D4401",
+      "source": "PC/SC / Cardpeek"
+    },
+    {
+      "aid": "D4534C504D44",
+      "source": "Android Card Bridge"
+    }
+  ],
+  "select_attempts": [],
+  "selected_aid": null,
+  "simulated_selected_aid": null,
+  "result": "HARDWARE_NOT_CONNECTED",
+  "physical_validation": "PENDING",
+  "disconnect_clean": true
+}

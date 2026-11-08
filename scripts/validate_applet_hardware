@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT=$(cd -- "$(dirname -- "$0")/.." && pwd)
+if [[ -x "$ROOT/.venv-applet-validation/bin/python" ]]; then
+  PYTHON="$ROOT/.venv-applet-validation/bin/python"
+elif [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON="$ROOT/.venv/bin/python"
+else
+  PYTHON=python3
+fi
+exec "$PYTHON" "$ROOT/scripts/validate_applet_hardware.py" "$@"

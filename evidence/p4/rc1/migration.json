@@ -1,0 +1,10 @@
+{
+  "forward": "APPLIED",
+  "idempotent": "ALREADY_APPLIED",
+  "incompatible_schema": "INCOMPATIBLE_SCHEMA",
+  "interrupted": "SYNTHETIC_MIGRATION_INTERRUPTION",
+  "lock": "PG_ADVISORY_LOCK",
+  "rollback_strategy": "ADDITIVE_BACKWARD_COMPATIBLE_NO_DESTRUCTIVE_DOWNGRADE",
+  "status": "PASS",
+  "verify": "PASS"
+}

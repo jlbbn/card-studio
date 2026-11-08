@@ -1,0 +1,125 @@
+{
+  "cloudwatch_changes": "NOT_EXECUTED",
+  "controlled_test": {
+    "injected": {
+      "alarm_id": "service-unavailable",
+      "comparison": "GREATER_THAN",
+      "metric": "service_unavailable",
+      "severity": "CRITICAL",
+      "state": "ALARM",
+      "threshold": 0,
+      "value": 1
+    },
+    "recovered": {
+      "alarm_id": "service-unavailable",
+      "comparison": "GREATER_THAN",
+      "metric": "service_unavailable",
+      "severity": "CRITICAL",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    }
+  },
+  "definitions": [
+    {
+      "alarm_id": "service-unavailable",
+      "comparison": "GREATER_THAN",
+      "metric": "service_unavailable",
+      "severity": "CRITICAL",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    },
+    {
+      "alarm_id": "alb-5xx",
+      "comparison": "GREATER_THAN",
+      "metric": "http_5xx",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    },
+    {
+      "alarm_id": "target-unhealthy",
+      "comparison": "GREATER_THAN",
+      "metric": "unhealthy_targets",
+      "severity": "CRITICAL",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    },
+    {
+      "alarm_id": "high-latency",
+      "comparison": "GREATER_THAN",
+      "metric": "latency_p95_ms",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 2000,
+      "value": 100
+    },
+    {
+      "alarm_id": "ecs-cpu",
+      "comparison": "GREATER_THAN",
+      "metric": "ecs_cpu_percent",
+      "severity": "HIGH",
+      "state": "INSUFFICIENT_DATA",
+      "threshold": 80,
+      "value": null
+    },
+    {
+      "alarm_id": "ecs-memory",
+      "comparison": "GREATER_THAN",
+      "metric": "ecs_memory_percent",
+      "severity": "HIGH",
+      "state": "INSUFFICIENT_DATA",
+      "threshold": 85,
+      "value": null
+    },
+    {
+      "alarm_id": "rds-cpu",
+      "comparison": "GREATER_THAN",
+      "metric": "db_cpu_percent",
+      "severity": "HIGH",
+      "state": "INSUFFICIENT_DATA",
+      "threshold": 80,
+      "value": null
+    },
+    {
+      "alarm_id": "rds-free-storage",
+      "comparison": "LESS_THAN",
+      "metric": "db_free_storage_mb",
+      "severity": "HIGH",
+      "state": "INSUFFICIENT_DATA",
+      "threshold": 1024,
+      "value": null
+    },
+    {
+      "alarm_id": "db-connections-abnormal",
+      "comparison": "GREATER_THAN",
+      "metric": "db_connections",
+      "severity": "HIGH",
+      "state": "INSUFFICIENT_DATA",
+      "threshold": 80,
+      "value": null
+    },
+    {
+      "alarm_id": "reconciliation-backlog",
+      "comparison": "GREATER_THAN",
+      "metric": "reconciliation_lag",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 10,
+      "value": 0
+    },
+    {
+      "alarm_id": "repeated-authentication-failures",
+      "comparison": "GREATER_THAN",
+      "metric": "authentication_failures",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 5,
+      "value": 0
+    }
+  ],
+  "status": "PASS"
+}

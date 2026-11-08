@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "full_regression": "441/441 PASS",
+  "cases": [
+    {"case": "invalid auth", "test_id": "test_p3_contract.py::test_invalid_authentication_and_signature", "result": "INVALID_SIGNATURE / FAIL_CLOSED"},
+    {"case": "replay", "test_id": "test_p3_contract.py::test_replay_and_expired_timestamp", "result": "DUPLICATE_NONCE"},
+    {"case": "stale timestamp", "test_id": "test_p3_contract.py::test_replay_and_expired_timestamp", "result": "TIMESTAMP_EXPIRED"},
+    {"case": "duplicate nonce", "test_id": "test_p3_contract.py::test_replay_and_expired_timestamp", "result": "DUPLICATE_NONCE"},
+    {"case": "tampered payload", "test_id": "test_p3_contract.py::test_tampered_payload_and_correlation_mismatch", "result": "INVALID_SIGNATURE"},
+    {"case": "wrong terminal", "test_id": "test_p3_contract.py::test_wrong_terminal_and_cross_terminal_isolation", "result": "TERMINAL_MISMATCH"},
+    {"case": "wrong correlation", "test_id": "test_p3_contract.py::test_tampered_payload_and_correlation_mismatch", "result": "CORRELATION_MISMATCH"},
+    {"case": "unauthorized refund", "test_id": "test_p3_contract.py::test_unauthorized_refund_fails_closed", "result": "OPERATION_NOT_AUTHORIZED"},
+    {"case": "unauthorized reversal", "test_id": "test_p3_contract.py::test_unauthorized_reversal_fails_closed", "result": "OPERATION_NOT_AUTHORIZED"},
+    {"case": "malformed amount", "test_id": "test_p3_contract.py::test_malformed_amount_currency_and_transition", "result": "ContractError"},
+    {"case": "malformed currency", "test_id": "test_p3_contract.py::test_malformed_amount_currency_and_transition", "result": "ContractError"},
+    {"case": "invalid transition", "test_id": "test_p2_cli_ui.py::test_card_view_and_invalid_sunmi_transition_do_not_use_cash", "result": "INVALID_CARD_FLOW_TRANSITION"}
+  ],
+  "effects_on_rejected_operations": 0,
+  "physical_validation": "NOT_EXECUTED"
+}

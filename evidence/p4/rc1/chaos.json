@@ -1,0 +1,9 @@
+{
+  "delayed_reconciliation": "MATCHED",
+  "duplicate_recovery": "PASS",
+  "effects_total": 219,
+  "operations": 20,
+  "reconciliation_lag": 0,
+  "retry_success": 20,
+  "status": "PASS"
+}

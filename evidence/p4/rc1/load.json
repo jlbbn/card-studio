@@ -1,0 +1,243 @@
+{
+  "alarms": [
+    {
+      "alarm_id": "service-unavailable",
+      "comparison": "GREATER_THAN",
+      "metric": "service_unavailable",
+      "severity": "CRITICAL",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    },
+    {
+      "alarm_id": "alb-5xx",
+      "comparison": "GREATER_THAN",
+      "metric": "http_5xx",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    },
+    {
+      "alarm_id": "target-unhealthy",
+      "comparison": "GREATER_THAN",
+      "metric": "unhealthy_targets",
+      "severity": "CRITICAL",
+      "state": "OK",
+      "threshold": 0,
+      "value": 0
+    },
+    {
+      "alarm_id": "high-latency",
+      "comparison": "GREATER_THAN",
+      "metric": "latency_p95_ms",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 2000,
+      "value": 55.694
+    },
+    {
+      "alarm_id": "ecs-cpu",
+      "comparison": "GREATER_THAN",
+      "metric": "ecs_cpu_percent",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 80,
+      "value": 0.01
+    },
+    {
+      "alarm_id": "ecs-memory",
+      "comparison": "GREATER_THAN",
+      "metric": "ecs_memory_percent",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 85,
+      "value": 0.06
+    },
+    {
+      "alarm_id": "rds-cpu",
+      "comparison": "GREATER_THAN",
+      "metric": "db_cpu_percent",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 80,
+      "value": 0.02
+    },
+    {
+      "alarm_id": "rds-free-storage",
+      "comparison": "LESS_THAN",
+      "metric": "db_free_storage_mb",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 1024,
+      "value": 502009.0
+    },
+    {
+      "alarm_id": "db-connections-abnormal",
+      "comparison": "GREATER_THAN",
+      "metric": "db_connections",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 80,
+      "value": 12.0
+    },
+    {
+      "alarm_id": "reconciliation-backlog",
+      "comparison": "GREATER_THAN",
+      "metric": "reconciliation_lag",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 10,
+      "value": 0
+    },
+    {
+      "alarm_id": "repeated-authentication-failures",
+      "comparison": "GREATER_THAN",
+      "metric": "authentication_failures",
+      "severity": "HIGH",
+      "state": "OK",
+      "threshold": 5,
+      "value": 0
+    }
+  ],
+  "autoscaling_behavior": "FIXED_SINGLE_TASK_STAGING_NO_AUTOSCALING_CONFIGURED",
+  "container_stats": [
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.01%",
+      "Container": "card-p4-swiftledger",
+      "ID": "b57ff08d5479",
+      "MemPerc": "0.06%",
+      "MemUsage": "33.75MiB / 59.61GiB",
+      "Name": "card-p4-swiftledger",
+      "NetIO": "875kB / 1.33MB",
+      "PIDs": "1"
+    },
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.01%",
+      "Container": "card-p4-tesoreria",
+      "ID": "3916f7a35cd4",
+      "MemPerc": "0.05%",
+      "MemUsage": "30.98MiB / 59.61GiB",
+      "Name": "card-p4-tesoreria",
+      "NetIO": "204kB / 224kB",
+      "PIDs": "1"
+    },
+    {
+      "BlockIO": "0B / 52.3MB",
+      "CPUPerc": "0.02%",
+      "Container": "card-p4-postgres",
+      "ID": "28fc0abb3c72",
+      "MemPerc": "0.06%",
+      "MemUsage": "33.77MiB / 59.61GiB",
+      "Name": "card-p4-postgres",
+      "NetIO": "1.29MB / 752kB",
+      "PIDs": "12"
+    }
+  ],
+  "cpu_memory_source": "docker stats --no-stream",
+  "database": {
+    "bytes": 9477143,
+    "connections": 12,
+    "free_storage_mb": 502009
+  },
+  "effects": 199,
+  "monetary_operations": false,
+  "operations": 199,
+  "reconciliation": "MATCHED",
+  "reconciliation_lag": 0,
+  "run_id": "p4-load-df950c953a62",
+  "simulation": true,
+  "state_counts": {
+    "refunds": 1,
+    "reversals": 1,
+    "uncertain": 0
+  },
+  "status": "PASS",
+  "steps": [
+    {
+      "4xx": 0,
+      "5xx": 0,
+      "elapsed_seconds": 0.005485,
+      "errors": 0,
+      "p50_ms": 5.193086981307715,
+      "p95_ms": 5.193086981307715,
+      "p99_ms": 5.193086981307715,
+      "requests": 1,
+      "retries": 0,
+      "status_counts": {
+        "200": 1
+      },
+      "terminals": 1,
+      "throughput_per_second": 182.316
+    },
+    {
+      "4xx": 0,
+      "5xx": 0,
+      "elapsed_seconds": 0.037692,
+      "errors": 0,
+      "p50_ms": 16.091,
+      "p95_ms": 30.768,
+      "p99_ms": 34.997,
+      "requests": 10,
+      "retries": 0,
+      "status_counts": {
+        "200": 10
+      },
+      "terminals": 10,
+      "throughput_per_second": 265.307
+    },
+    {
+      "4xx": 0,
+      "5xx": 0,
+      "elapsed_seconds": 0.052091,
+      "errors": 0,
+      "p50_ms": 14.065,
+      "p95_ms": 31.818,
+      "p99_ms": 43.051,
+      "requests": 25,
+      "retries": 0,
+      "status_counts": {
+        "200": 25
+      },
+      "terminals": 25,
+      "throughput_per_second": 479.928
+    },
+    {
+      "4xx": 0,
+      "5xx": 0,
+      "elapsed_seconds": 0.118003,
+      "errors": 0,
+      "p50_ms": 12.109,
+      "p95_ms": 55.694,
+      "p99_ms": 72.365,
+      "requests": 50,
+      "retries": 0,
+      "status_counts": {
+        "200": 50
+      },
+      "terminals": 50,
+      "throughput_per_second": 423.72
+    },
+    {
+      "4xx": 0,
+      "5xx": 0,
+      "elapsed_seconds": 0.208473,
+      "errors": 0,
+      "p50_ms": 13.395,
+      "p95_ms": 48.907,
+      "p99_ms": 101.834,
+      "requests": 100,
+      "retries": 0,
+      "status_counts": {
+        "200": 100
+      },
+      "terminals": 100,
+      "throughput_per_second": 479.678
+    }
+  ],
+  "task_restarts_observed": 4,
+  "total_errors": 0,
+  "total_requests": 186
+}

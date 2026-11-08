@@ -1,0 +1,122 @@
+{
+  "completed_at": "2026-11-08T20:19:33.169146Z",
+  "correlation_id": "p4-rc1-staging",
+  "deployment": "PASS",
+  "gates": [
+    {
+      "detail": {
+        "environment": "STAGING_ISOLATED",
+        "production": false
+      },
+      "elapsed_ms": 0.005,
+      "gate": "PRECHECK",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:32.607118Z"
+    },
+    {
+      "detail": {
+        "image_digest": "sha256:06ee83091d664449271052c788f72e220fb18fe73af604cf6e9f6ded271bbbd8",
+        "revision": "rc1-001"
+      },
+      "elapsed_ms": 0.003,
+      "gate": "DEPLOY",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:32.607130Z"
+    },
+    {
+      "detail": {
+        "sunmi-pos": {
+          "ok": true
+        },
+        "swiftledger": {
+          "ok": true
+        },
+        "tesoreria": {
+          "ok": true
+        }
+      },
+      "elapsed_ms": 53.406,
+      "gate": "HEALTH",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:32.607135Z"
+    },
+    {
+      "detail": {
+        "sunmi-pos": {
+          "ok": true
+        },
+        "swiftledger": {
+          "ok": true
+        },
+        "tesoreria": {
+          "ok": true
+        }
+      },
+      "elapsed_ms": 51.576,
+      "gate": "READINESS",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:32.660551Z"
+    },
+    {
+      "detail": {
+        "schema_version": 1,
+        "sha256": "6a5c482514c13cbdbbe86470e9091d5fbccf68d4dfb119f11480c813467ab8c8",
+        "status": "PASS",
+        "version": "001_p3_postgresql"
+      },
+      "elapsed_ms": 321.542,
+      "gate": "MIGRATION_VERIFY",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:32.712133Z"
+    },
+    {
+      "detail": {
+        "reconciliation": "MATCHED",
+        "state": "APPROVED"
+      },
+      "elapsed_ms": 132.197,
+      "gate": "E2E_SYNTHETIC",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:33.033685Z"
+    },
+    {
+      "detail": {
+        "operations": 1,
+        "trace": [
+          "terminal_id",
+          "correlation_id",
+          "transaction_id",
+          "authorization",
+          "persistence",
+          "treasury",
+          "reconciliation"
+        ]
+      },
+      "elapsed_ms": 3.242,
+      "gate": "OBSERVABILITY_VERIFY",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:33.165895Z"
+    }
+  ],
+  "image_digest": "sha256:06ee83091d664449271052c788f72e220fb18fe73af604cf6e9f6ded271bbbd8",
+  "migration": {
+    "forward": "APPLIED",
+    "idempotent": "ALREADY_APPLIED",
+    "incompatible_schema": "INCOMPATIBLE_SCHEMA",
+    "interrupted": "SYNTHETIC_MIGRATION_INTERRUPTION",
+    "lock": "PG_ADVISORY_LOCK",
+    "rollback_strategy": "ADDITIVE_BACKWARD_COMPATIBLE_NO_DESTRUCTIVE_DOWNGRADE",
+    "status": "PASS",
+    "verify": "PASS"
+  },
+  "physical_validation": "NOT_EXECUTED",
+  "release_candidate": "RC1",
+  "schema_version": 1,
+  "started_at": "2026-11-08T20:19:32.607074Z",
+  "status": "PASS",
+  "task_revisions": {
+    "sunmi-pos": "rc1-001",
+    "swiftledger": "rc1-001",
+    "tesoreria": "rc1-001"
+  }
+}

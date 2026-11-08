@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-11-06T23:33:14.898905Z",
+  "mode": "SIMULATED",
+  "checks": [
+    {
+      "name": "aid-configuration",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "pcsc-adapter",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "select-builder",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "response-parser",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "status-word-interpreter",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "evidence-writer",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "dry-run-and-mocks",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "test-count",
+      "status": "PASS",
+      "detail": "50"
+    },
+    {
+      "name": "tests",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "hardware-validation-command",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "software_readiness": "PASS",
+  "hardware_readiness": "PASS",
+  "physical_validation": "PENDING",
+  "result": "HARDWARE_READY"
+}

@@ -1,0 +1,156 @@
+{
+  "scenarios": [
+    {
+      "detail": {
+        "recovered": true
+      },
+      "scenario_id": "restart-swiftledger",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:19:49.277530Z"
+    },
+    {
+      "detail": {
+        "recovered": true
+      },
+      "scenario_id": "restart-sunmi-pos",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:00.022066Z"
+    },
+    {
+      "detail": {
+        "recovered": true
+      },
+      "scenario_id": "restart-tesoreria",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:10.772462Z"
+    },
+    {
+      "detail": {
+        "livez": {
+          "ok": true
+        },
+        "readyz_during_outage": {
+          "ok": false
+        },
+        "recovery": {
+          "created": true,
+          "error": null,
+          "status": "RECORDED"
+        }
+      },
+      "scenario_id": "db-temporary-unavailable",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:11.853759Z"
+    },
+    {
+      "detail": {
+        "first": {
+          "automatic_retry": false,
+          "error": "BACKEND_TIMEOUT_AFTER_SEND",
+          "status": "UNCERTAIN"
+        },
+        "retry": {
+          "created": false,
+          "error": null,
+          "status": "RECORDED"
+        }
+      },
+      "scenario_id": "backend-timeout",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:18.233591Z"
+    },
+    {
+      "detail": {
+        "first": {
+          "automatic_retry": false,
+          "error": "MALFORMED_BACKEND_RESPONSE",
+          "status": "UNCERTAIN"
+        },
+        "retry": {
+          "created": true,
+          "error": null,
+          "status": "RECORDED"
+        }
+      },
+      "scenario_id": "malformed-response",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:18.362351Z"
+    },
+    {
+      "detail": {
+        "first": {
+          "automatic_retry": false,
+          "error": "BACKEND_UNAVAILABLE_UNCERTAIN",
+          "status": "UNCERTAIN"
+        },
+        "retry": {
+          "created": true,
+          "error": null,
+          "status": "RECORDED"
+        }
+      },
+      "scenario_id": "network-interruption",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:18.694728Z"
+    },
+    {
+      "detail": {
+        "created": 1,
+        "responses": 10
+      },
+      "scenario_id": "retry-storm-duplicate-request",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:19.750480Z"
+    },
+    {
+      "detail": {
+        "after": "APPROVED",
+        "before": "UNCERTAIN"
+      },
+      "scenario_id": "late-response-restart-during-uncertain",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:30.595164Z"
+    },
+    {
+      "detail": {
+        "reconciliation": "MATCHED"
+      },
+      "scenario_id": "restart-during-reconciliation",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:48.238289Z"
+    },
+    {
+      "detail": {
+        "retry": {
+          "created": true,
+          "error": null,
+          "status": "RECORDED"
+        }
+      },
+      "scenario_id": "failure-during-refund",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:48.468415Z"
+    },
+    {
+      "detail": {
+        "retry": {
+          "created": true,
+          "error": null,
+          "status": "RECORDED"
+        }
+      },
+      "scenario_id": "failure-during-reversal",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:48.707792Z"
+    },
+    {
+      "detail": {
+        "status": "MATCHED"
+      },
+      "scenario_id": "reconciliation-after-failures",
+      "status": "PASS",
+      "timestamp": "2026-11-08T20:20:53.717085Z"
+    }
+  ],
+  "status": "PASS"
+}
