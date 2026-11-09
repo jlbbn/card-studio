@@ -107,3 +107,15 @@ python3 -m unittest discover -s tests -v
 ```
 
 La suite no usa red, lectores, tarjetas, la base de SUNMI V3 Cobros ni credenciales. Los escenarios PC/SC y Hardware Validation usan mocks explícitos; nunca se reportan como pruebas físicas.
+
+## Live Pairing reader ↔ server
+
+Card Studio incluye un esquema compartido para que un lector remoto publique metadatos permitidos en un servidor. El handshake usa HMAC, cada sesión deriva claves con HKDF y cada evento se transporta y conserva como un sobre AES-256-GCM idempotente y atómico. No se aceptan PAN, Track 2, PIN, CVV, APDU completos ni llaves.
+
+```bash
+./run.sh --cli pairing generate-key
+./run.sh --cli pairing serve --reader-id paco-reader
+./run.sh --cli pairing publish --server http://127.0.0.1:8765 --reader-id paco-reader --atr 3B0000 --aid D4534C504D4401
+```
+
+Los tres comandos requieren la misma `CARD_STUDIO_PAIRING_KEY` en servidor y lector, salvo `generate-key`. La guía, el esquema y la recuperación ante timeouts están en [docs/LIVE_PAIRING.md](docs/LIVE_PAIRING.md). El pairing no accede al lector físico ni ejecuta operaciones de pago.

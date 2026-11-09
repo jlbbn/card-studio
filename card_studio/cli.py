@@ -19,12 +19,24 @@ from .hardware_validation import HardwareValidator, choose_reader
 from .integration.physical import prepare_physical_session
 from .ledger import LedgerClient, LedgerError
 from .model import CardError, parse_amount
+from .pairing import (
+    AtomicEnvelopeStore,
+    PairingClient,
+    PairingError,
+    PairingService,
+    build_metadata_event,
+    decode_pairing_key,
+    generate_pairing_key,
+    make_server as make_pairing_server,
+    metadata_event_from_evidence,
+)
 from .pcsc import create_pcsc_backend
 from .readers.base import Capability, CapabilityState, ReaderError
 from .readers.pcsc import PcscReaderAdapter
 from .service import CardStudioService
 from .startup import initialize_application
 from .store import JsonStore
+from .system import data_directory
 
 
 def parser() -> argparse.ArgumentParser:
@@ -86,6 +98,29 @@ def parser() -> argparse.ArgumentParser:
     l3 = commands.add_parser("l3")
     l3_commands = l3.add_subparsers(dest="l3_command", required=True)
     l3_commands.add_parser("readiness")
+
+    pairing = commands.add_parser("pairing")
+    pairing_commands = pairing.add_subparsers(dest="pairing_command", required=True)
+    pairing_commands.add_parser("generate-key")
+    serve = pairing_commands.add_parser("serve")
+    serve.add_argument("--bind", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8765)
+    serve.add_argument("--server-id", default="card-studio-server")
+    serve.add_argument("--reader-id", required=True)
+    publish = pairing_commands.add_parser("publish")
+    publish.add_argument("--server", required=True)
+    publish.add_argument("--reader-id", required=True)
+    publish.add_argument("--evidence", type=Path)
+    publish.add_argument("--event-id")
+    publish.add_argument("--atr")
+    publish.add_argument("--aid")
+    publish.add_argument("--reader-name")
+    publish.add_argument("--application-label")
+    publish.add_argument("--interface", choices=["CONTACT", "CONTACTLESS", "VIRTUAL"], default="CONTACT")
+    publish.add_argument("--protocol", choices=["T=0", "T=1", "VIRTUAL", "UNKNOWN"], default="UNKNOWN")
+    publish.add_argument("--source-mode", choices=["SIMULATED", "LIVE_READ_ONLY"], default="SIMULATED")
+    publish.add_argument("--source-result", default="OPERATOR_SUPPLIED")
+    publish.add_argument("--captured-at")
     return result
 
 
@@ -151,6 +186,87 @@ def _transaction_cli(args: argparse.Namespace) -> int:
     return 0
 
 
+def _pairing_cli(args: argparse.Namespace) -> int:
+    command = args.pairing_command
+    if command == "generate-key":
+        emit({
+            "pairing_key": generate_pairing_key(),
+            "encoding": "base64url",
+            "bytes": 32,
+            "stored": False,
+        })
+        return 0
+
+    encoded_key = os.environ.get("CARD_STUDIO_PAIRING_KEY", "")
+    if not encoded_key:
+        raise PairingError("PAIRING_KEY_REQUIRED", "Define CARD_STUDIO_PAIRING_KEY en ambos extremos.")
+    key = decode_pairing_key(encoded_key)
+    if command == "serve":
+        if not 1 <= args.port <= 65535:
+            raise PairingError("INVALID_SERVER_PORT")
+        store = AtomicEnvelopeStore((args.data_dir or data_directory()) / "pairing-events")
+        service = PairingService(key, args.reader_id, args.server_id, store)
+        server = make_pairing_server((args.bind, args.port), service)
+        emit({
+            "status": "LISTENING",
+            "address": f"{args.bind}:{server.server_port}",
+            "reader_id": args.reader_id,
+            "server_id": args.server_id,
+            "encrypted_storage": str(store.directory),
+            "physical_validation": "NOT_EXECUTED_BY_PAIRING",
+        })
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.server_close()
+        return 0
+
+    if args.evidence:
+        try:
+            report = json.loads(args.evidence.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise PairingError("MALFORMED_EVIDENCE") from error
+        event = metadata_event_from_evidence(
+            report,
+            args.reader_id,
+            interface=args.interface,
+            protocol=args.protocol,
+            application_label=args.application_label,
+            event_id=args.event_id,
+        )
+    else:
+        event = build_metadata_event(
+            args.reader_id,
+            {
+                "atr": args.atr,
+                "selected_aid": args.aid,
+                "reader_name": args.reader_name,
+                "application_label": args.application_label,
+                "interface": args.interface,
+                "protocol": args.protocol,
+                "standard": "ISO/IEC 7816-4",
+            },
+            evidence_class="SYNTHETIC" if args.source_mode == "SIMULATED" else "LIVE_READ_ONLY",
+            source_result=args.source_result,
+            captured_at=args.captured_at,
+            event_id=args.event_id,
+        )
+    client = PairingClient(args.server, args.reader_id, key)
+    paired = client.pair()
+    acknowledgement = client.publish(event)
+    emit({
+        "status": acknowledgement["status"],
+        "event_id": acknowledgement["event_id"],
+        "session_id": paired["session_id"],
+        "server_id": paired["server_id"],
+        "encrypted_envelope": True,
+        "physical_validation": "NOT_EXECUTED_BY_PAIRING",
+    })
+    return 0
+
+
 def main(argv: list[str]) -> int:
     args = parser().parse_args(argv)
     try:
@@ -158,6 +274,8 @@ def main(argv: list[str]) -> int:
         settings = _settings(args, settings_store)
         if args.command in {"transaction", "kernel", "l3"}:
             return _transaction_cli(args)
+        if args.command == "pairing":
+            return _pairing_cli(args)
         if args.command == "configure":
             if args.mode:
                 settings.mode = args.mode
@@ -260,6 +378,9 @@ def main(argv: list[str]) -> int:
         return 1
     except LedgerError as error:
         emit({"error": "LEDGER_ERROR", "message": str(error)})
+        return 1
+    except PairingError as error:
+        emit({"error": error.code, "message": error.message, "physical_validation": "NOT_EXECUTED_BY_PAIRING"})
         return 1
     except ValueError as error:
         emit({"error": "CONFIG_ERROR", "message": str(error)})
