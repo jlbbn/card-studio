@@ -3,6 +3,8 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+
+CHIP_ID_ROOT_AVAILABLE = (Path.home() / "chip-id").is_dir()
 from unittest.mock import patch
 
 from card_studio.chip_identifier import ChipIdentifierClient, ChipIdentifierError
@@ -102,6 +104,10 @@ class ChipIdentifierIntegrationTests(unittest.TestCase):
     def tearDown(self):
         self.directory.cleanup()
 
+    @unittest.skipUnless(
+        CHIP_ID_ROOT_AVAILABLE,
+        "external chip-id repository not available",
+    )
     def test_real_profile_is_validated_offline(self):
         profile = self.client.profile()
         self.assertEqual(profile["application"]["aid"], "D4534C504D4401")
@@ -109,11 +115,19 @@ class ChipIdentifierIntegrationTests(unittest.TestCase):
         self.assertEqual(profile["source"], "OFFLINE")
         self.assertEqual(profile["physical_validation"], "NOT_EXECUTED")
 
+    @unittest.skipUnless(
+        CHIP_ID_ROOT_AVAILABLE,
+        "external chip-id repository not available",
+    )
     def test_real_container_is_validated_without_hardware(self):
         container = self.client.container()
         self.assertEqual(container["state"]["current"], "PERSONALIZED")
         self.assertEqual(container["physical_evidence"]["validation_status"], "NOT_EXECUTED")
 
+    @unittest.skipUnless(
+        CHIP_ID_ROOT_AVAILABLE,
+        "external chip-id repository not available",
+    )
     def test_summary_exposes_only_integration_fields(self):
         summary = self.client.summary()
         self.assertEqual(summary["protocols"], ["T=0", "T=1"])
@@ -121,6 +135,10 @@ class ChipIdentifierIntegrationTests(unittest.TestCase):
         self.assertEqual(summary["container_state"], "PERSONALIZED")
         self.assertNotIn("tlv", summary)
 
+    @unittest.skipUnless(
+        CHIP_ID_ROOT_AVAILABLE,
+        "external chip-id repository not available",
+    )
     def test_status_reports_all_artifacts(self):
         status = self.client.status()
         self.assertEqual(status["offline_status"], "WAITING_FOR_READER")

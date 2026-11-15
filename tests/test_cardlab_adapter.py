@@ -1,6 +1,6 @@
 import json
 
-import pytest
+import unittest
 
 from card_studio.cardlab_adapter import load_cardlab_status
 from card_studio.model import CardError
@@ -48,10 +48,10 @@ def test_cardlab_rejects_wrong_aid(tmp_path):
     path = tmp_path / "validate-all.json"
     path.write_text(json.dumps(value))
 
-    with pytest.raises(CardError) as caught:
+    with unittest.TestCase().assertRaises(CardError) as caught:
         load_cardlab_status(path)
 
-    assert caught.value.code == "CARDLAB_APPLET_AID_MISMATCH"
+    assert caught.exception.code == "CARDLAB_APPLET_AID_MISMATCH"
 
 
 def test_cardlab_fails_when_physical_check_fails(tmp_path):
