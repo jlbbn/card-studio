@@ -178,6 +178,13 @@ class PcscBackend(ApduCardBackend):
         command = build_select_apdu(aid or APPLET_AID_CANDIDATES[0].aid, occurrence=occurrence)
         return self.transmit(command)
 
+    def read(self):
+        # El hardware físico usa GET DATA P1/P2=0001.
+        # Los backends simulados conservan el contrato legacy 0002.
+        if self.mode == "PHYSICAL":
+            return self.command("80CA000100")
+        return super().read()
+
     def disconnect(self) -> None:
         connection = self._connection
         self._connection = None

@@ -187,9 +187,36 @@ def amount_apdu(kind: str, amount_minor: int) -> str:
 def parse_state_response(data: bytes) -> CardState:
     try:
         text = data.decode("ascii")
-        version, identifier, balance_hex, currency = text.split("|")
-        if version != "SL1" or not re.fullmatch(r"[0-9A-F]{8}", balance_hex):
-            raise ValueError
-        return CardState(validate_card_id(identifier), int(balance_hex, 16), currency)
+        parts = text.split("|")
+
+        # Contrato SL1 existente.
+        if len(parts) == 4:
+            version, identifier, balance_hex, currency = parts
+            if version == "SL1" and re.fullmatch(r"[0-9A-F]{8}", balance_hex):
+                return CardState(
+                    validate_card_id(identifier),
+                    int(balance_hex, 16),
+                    currency,
+                )
+
+        # Applet físico demo existente.
+        # SWIFT LEDGER DEMO|NONPAYMENT|5968
+        if (
+            len(parts) == 3
+            and parts[0] == "SWIFT LEDGER DEMO"
+            and parts[1] == "NONPAYMENT"
+            and re.fullmatch(r"[0-9]{4}", parts[2])
+        ):
+            return CardState(
+                validate_card_id(f"SL-DEMO-{parts[2]}"),
+                0,
+                "MXN",
+            )
+
+        raise ValueError
+
     except (ValueError, UnicodeDecodeError) as exc:
-        raise CardError("INVALID_CARD_RESPONSE", "La tarjeta devolvió una respuesta no reconocida.") from exc
+        raise CardError(
+            "INVALID_CARD_RESPONSE",
+            "La tarjeta devolvió una respuesta no reconocida.",
+        ) from exc
