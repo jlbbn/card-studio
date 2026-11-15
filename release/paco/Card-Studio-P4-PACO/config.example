@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "ledgerUrl": "http://127.0.0.1:5300",
+  "terminalCode": "",
+  "sunmiUrl": "http://127.0.0.1:5380",
+  "mode": "virtual",
+  "reader": "",
+  "hardwareValidationEnabled": true
+}

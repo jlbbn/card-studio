@@ -37,3 +37,10 @@ secrets*
 .DS_Store
 *.swp
 *~
+
+# PACO generated release artifacts
+release/paco/**/evidence/*.log
+release/paco/**/*.bundle
+release/paco/**/*.bundle.sha256
+release/paco/**/source/*.sha256
+release/paco/**/SHA256SUMS

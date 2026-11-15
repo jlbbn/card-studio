@@ -1,0 +1,21 @@
+{
+  "build_timestamp": "2026-11-08T22:30:58.549184+00:00",
+  "dependency_locks": {
+    "requirements-build.txt": "e5fb06e513e3087357c05e9a725a614ff96589d15d41205e713e97bbe062be57",
+    "requirements-p3-lock.txt": "9171e96b92ddec64cd54aaa17c1249b6b59d03dc95763b3c78c0e13e852552b1",
+    "requirements-p4-lock.txt": "cf66e7c1a2f036e5603e28a2decdd933096864f50551e14fd3f28964a74bf8d0",
+    "requirements-postgres.txt": "cf66e7c1a2f036e5603e28a2decdd933096864f50551e14fd3f28964a74bf8d0",
+    "requirements.txt": "42febe6fc8dc626f793e7b062076b66bacacd8c58cd38b3d6554adb7208e347d"
+  },
+  "git_commit": "296fa89457590903488e0055953cbd1d171f52f0",
+  "git_root_isolated": true,
+  "git_status": "EMPTY",
+  "git_tag": "card-studio-p4-baseline",
+  "native_macos_build": "NOT EXECUTED",
+  "platform_target": "macOS 12+; native arm64 or x86_64",
+  "product": "Card Studio",
+  "provenance": "OFFICIAL_GIT_BUNDLE_CLEAN_ROOM",
+  "source_bundle_sha256": "424e6f8fde5c6b2c38896c676783263ddb3afb085d60407dbb18423f630bdc98",
+  "source_hash": "6ff7100fdc86d9c1d55b6a113d0a495082fcc9342d7df1642b7f1aac5f9b140f",
+  "version": "1.2.0-p4-rc1"
+}

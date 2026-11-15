@@ -1,0 +1,8 @@
+{
+  "absolute_path_negative_scan": "PASS",
+  "deterministic_app_archive": "PASS",
+  "negative_difference_detection": "PASS",
+  "paco_installed_parity": "NOT EXECUTED",
+  "positive_parity": "PASS",
+  "scope": "SYNTHETIC_VERIFIER_FIXTURE_NOT_MACOS_INSTALLATION"
+}

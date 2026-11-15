@@ -1,0 +1,52 @@
+{
+  "app_bundle_hash": null,
+  "baseline": {
+    "L3": "20/20 PASS",
+    "P0": "35/35 PASS",
+    "P1": "29/29 PASS",
+    "P2": "7/7 PASS",
+    "P3": "15/15 PASS",
+    "P4": "18/18 PASS",
+    "full_regression": "441/441 PASS"
+  },
+  "build_date": "2026-11-08T22:30:58.549184+00:00",
+  "certification": "NOT COMPLETED",
+  "clean_build": "PASS",
+  "dmg": {
+    "path": "Card-Studio-P4-PACO.dmg",
+    "sha256": null,
+    "status": "NOT EXECUTED"
+  },
+  "full_regression": {
+    "errors": 0,
+    "failures": 0,
+    "passed": 441,
+    "sha256": "b9035c06f9d474d0850adadb6610c5c4c9c2ff493e8053d6aada2fd59c5e2c05",
+    "skipped": 0,
+    "status": "PASS",
+    "total": 441,
+    "unexpected_successes": 0
+  },
+  "git_commit": "296fa89457590903488e0055953cbd1d171f52f0",
+  "git_tag": "card-studio-p4-baseline",
+  "install_smoke_test": "NOT EXECUTED",
+  "l3_result": "20/20 PASS",
+  "lockfile_hash": "97a5960c3f78e5ca8964cf377e49d2ebbd578fd614a5e43fd9cd255da835d52d",
+  "macos_app": "NOT EXECUTED",
+  "paco_parity_verification": "NOT EXECUTED",
+  "physical_validation": "DEFERRED / NOT EXECUTED",
+  "postgresql_suite": {
+    "errors": 0,
+    "failures": 0,
+    "passed": 16,
+    "sha256": "5706614749351588c05b3d4a138302c7757f05bc3035f1e416613f2b0b53fa21",
+    "skipped": 0,
+    "status": "PASS",
+    "total": 16,
+    "unexpected_successes": 0
+  },
+  "product": "Card Studio",
+  "source_hash": "6ff7100fdc86d9c1d55b6a113d0a495082fcc9342d7df1642b7f1aac5f9b140f",
+  "target_platform": "macOS 12+; native arm64 or x86_64",
+  "version": "1.2.0-p4-rc1"
+}

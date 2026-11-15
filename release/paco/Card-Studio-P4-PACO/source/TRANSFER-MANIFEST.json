@@ -1,0 +1,18 @@
+{
+  "product": "Card Studio",
+  "release": "P4-PACO",
+  "git_commit": "296fa89457590903488e0055953cbd1d171f52f0",
+  "git_tag": "card-studio-p4-baseline",
+  "bundle_sha256": "424e6f8fde5c6b2c38896c676783263ddb3afb085d60407dbb18423f630bdc98",
+  "baseline": {
+    "P0": "35/35 PASS",
+    "P1": "29/29 PASS",
+    "P2": "7/7 PASS",
+    "P3": "15/15 PASS",
+    "P4": "18/18 PASS",
+    "L3": "20/20 PASS",
+    "full_regression": "441/441 PASS"
+  },
+  "physical_validation": "DEFERRED / NOT EXECUTED",
+  "formal_certification": "NOT COMPLETED"
+}
