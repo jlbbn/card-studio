@@ -46,6 +46,10 @@ class CoexistentInstallTests(unittest.TestCase):
         path.write_text(json.dumps(document), encoding="utf-8")
         return path
 
+    @unittest.skipUnless(
+        Path(DEFAULT_CAP).is_file() and Path(DEFAULT_GP_JAR).is_file(),
+        "CAP real / GlobalPlatformPro no disponibles en este entorno",
+    )
     def test_real_cap_hash_aids_and_lfdb(self):
         report = inspect_cap(DEFAULT_CAP, DEFAULT_GP_JAR)
         self.assertEqual(report["cap_sha256"], CAP_SHA256)
@@ -65,7 +69,19 @@ class CoexistentInstallTests(unittest.TestCase):
     def test_prepare_install_with_simulated_registry(self):
         with tempfile.TemporaryDirectory() as directory:
             registry = self.registry_file(directory)
-            report = prepare_install(DEFAULT_CAP, DEFAULT_GP_JAR, registry)
+            with patch(
+                "card_studio.coexistent_install.inspect_cap",
+                return_value={
+                    "cap_path": "fixture.cap",
+                    "cap_bytes": 1,
+                    "cap_sha256": CAP_SHA256,
+                    "load_file_data_hash_sha256": LFDB_SHA256.upper(),
+                    "package_aid": PACKAGE_AID,
+                    "applet_aid": APPLET_AID,
+                    "capfile_parse": "PASS",
+                },
+            ):
+                report = prepare_install(DEFAULT_CAP, DEFAULT_GP_JAR, registry)
             self.assertEqual(report["result"], "SIMULATED_READY")
             self.assertEqual(report["physical_install"], "NOT_EXECUTED")
             self.assertEqual(report["mode"], "SIMULATED")
@@ -135,7 +151,18 @@ class CoexistentInstallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             registry = self.registry_file(directory, mode="LIVE_READ_ONLY")
             evidence = Path(directory) / "install.json"
-            with patch.dict(os.environ, {"GP_KEY": key}):
+            with patch.dict(os.environ, {"GP_KEY": key}), patch(
+                "card_studio.coexistent_install.inspect_cap",
+                return_value={
+                    "cap_path": "fixture.cap",
+                    "cap_bytes": 1,
+                    "cap_sha256": CAP_SHA256,
+                    "load_file_data_hash_sha256": LFDB_SHA256.upper(),
+                    "package_aid": PACKAGE_AID,
+                    "applet_aid": APPLET_AID,
+                    "capfile_parse": "PASS",
+                },
+            ):
                 report = execute_install(DEFAULT_CAP, DEFAULT_GP_JAR, registry, evidence_path=evidence, runner=runner)
             self.assertEqual(report["result"], "INSTALL_COMMAND_PASS_POSTCHECK_REQUIRED")
             self.assertEqual(report["physical_validation"], "INCONCLUSIVE")
@@ -152,7 +179,18 @@ class CoexistentInstallTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             registry = self.registry_file(directory, mode="LIVE_READ_ONLY")
-            with patch.dict(os.environ, {"GP_KEY": "404142434445464748494A4B4C4D4E4F"}):
+            with patch.dict(os.environ, {"GP_KEY": "404142434445464748494A4B4C4D4E4F"}), patch(
+                "card_studio.coexistent_install.inspect_cap",
+                return_value={
+                    "cap_path": "fixture.cap",
+                    "cap_bytes": 1,
+                    "cap_sha256": CAP_SHA256,
+                    "load_file_data_hash_sha256": LFDB_SHA256.upper(),
+                    "package_aid": PACKAGE_AID,
+                    "applet_aid": APPLET_AID,
+                    "capfile_parse": "PASS",
+                },
+            ):
                 report = execute_install(DEFAULT_CAP, DEFAULT_GP_JAR, registry, runner=runner)
             self.assertEqual(report["result"], "FAIL")
             self.assertEqual(report["errors"], ["INSTALL_COMMAND_FAILED"])
@@ -167,7 +205,18 @@ class CoexistentInstallTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             registry = self.registry_file(directory, mode="LIVE_READ_ONLY")
-            with patch.dict(os.environ, {"GP_KEY": "404142434445464748494A4B4C4D4E4F"}):
+            with patch.dict(os.environ, {"GP_KEY": "404142434445464748494A4B4C4D4E4F"}), patch(
+                "card_studio.coexistent_install.inspect_cap",
+                return_value={
+                    "cap_path": "fixture.cap",
+                    "cap_bytes": 1,
+                    "cap_sha256": CAP_SHA256,
+                    "load_file_data_hash_sha256": LFDB_SHA256.upper(),
+                    "package_aid": PACKAGE_AID,
+                    "applet_aid": APPLET_AID,
+                    "capfile_parse": "PASS",
+                },
+            ):
                 report = execute_install(DEFAULT_CAP, DEFAULT_GP_JAR, registry, runner=runner)
             self.assertEqual(report["errors"], ["INSTALL_TIMEOUT_QUERY_REQUIRED"])
             self.assertEqual(report["physical_validation"], "INCONCLUSIVE")
