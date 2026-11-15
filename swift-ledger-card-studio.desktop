@@ -1,9 +1,10 @@
 [Desktop Entry]
 Type=Application
 Name=Swift Ledger Card Studio
-Comment=Tarjetas virtuales y físicas Swift Ledger en modo simulación
-Exec=/home/admin1/payment/card-studio/run.sh
+Comment=Tarjetas virtuales y físicas Swift Ledger
+Exec=swift-ledger-card-studio
 Icon=utilities-terminal
 Terminal=false
 Categories=Office;Finance;
 Keywords=Swift;Ledger;Card;NFC;SUNMI;
+StartupNotify=true
