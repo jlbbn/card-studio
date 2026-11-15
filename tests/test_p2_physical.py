@@ -80,14 +80,18 @@ class AidResolutionTests(unittest.TestCase):
         cases = (
             ({first: "9000", second: "6A82"}, "PHYSICALLY_CONFIRMED", first),
             ({first: "6A82", second: "9000"}, "PHYSICALLY_CONFIRMED", second),
-            ({first: "9000", second: "9000"}, "MULTIPLE_AID_MATCH", None),
+            ({first: "9000", second: "9000"}, "PHYSICALLY_CONFIRMED", first),
+            ({first: "9000", second: "9000", (first, "next"): "9000"}, "MULTIPLE_AID_MATCH", None),
+            ({first: "9000", second: "6A82", (first, "next"): "9000"}, "MULTIPLE_AID_MATCH", None),
             ({first: "6A82", second: "6A82"}, "APPLET_NOT_FOUND", None),
             ({first: "6985", second: "9000"}, "INCONCLUSIVE", None),
         )
         for statuses, expected, selected in cases:
             with self.subTest(expected=expected):
-                def select(aid):
-                    status = statuses[aid]
+                def select(aid, occurrence="first"):
+                    status = statuses.get((aid, occurrence))
+                    if status is None:
+                        status = statuses[aid] if occurrence == "first" else "6A82"
                     return ApduResponse(b"", int(status[:2], 16), int(status[2:], 16))
                 report = resolve_aid(select, "PHYSICAL")
                 self.assertEqual(report["result"], expected)
@@ -95,7 +99,11 @@ class AidResolutionTests(unittest.TestCase):
                 self.assertEqual(report["physical_validation"], "INCONCLUSIVE")
 
     def test_simulated_selection_never_selects_physical_aid(self):
-        report = resolve_aid(lambda aid: "9000" if aid.endswith("01") else "6A82")
+        def select(aid, occurrence="first"):
+            if occurrence == "next":
+                return "6A82"
+            return "9000" if aid.endswith("01") else "6A82"
+        report = resolve_aid(select, "SIMULATED")
         self.assertEqual(report["result"], "SIMULATED_MATCH")
         self.assertIsNone(report["selected_aid"])
         self.assertEqual(report["simulated_selected_aid"], "D4534C504D4401")
@@ -106,6 +114,7 @@ class PhysicalPreparationTests(unittest.TestCase):
     def test_pcsc_atr_protocol_select_disconnect_and_reconnect(self):
         connection = FakeConnection({
             build_select_apdu("D4534C504D4401").hex().upper(): "9000",
+            build_select_apdu("D4534C504D4401", occurrence="next").hex().upper(): "6A82",
             build_select_apdu("D4534C504D44").hex().upper(): "6A82",
         })
         report = prepare_physical_session(adapter(connection), "Rocketek CSCR3 00 00", "p2-physical")

@@ -50,7 +50,7 @@ def run_readiness(project_root: Path, include_tests: bool = True) -> dict[str, A
         expected = {
             "aid1-selected": "SIMULATED_MATCH",
             "aid2-selected": "SIMULATED_MATCH",
-            "multiple": "MULTIPLE_AID_MATCH",
+            "multiple": "SIMULATED_MATCH",
             "not-found": "APPLET_NOT_FOUND",
             "reader-absent": "HARDWARE_NOT_CONNECTED",
             "card-absent": "CARD_NOT_PRESENT",

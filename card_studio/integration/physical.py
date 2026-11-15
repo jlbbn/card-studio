@@ -70,36 +70,41 @@ def resolve_aid(select: Callable[[str], Any], mode: str = "SIMULATED") -> dict[s
         raise PhysicalPreparationError("INVALID_VALIDATION_MODE", "Modo de validación AID inválido.")
     attempts = []
     for candidate in APPLET_AID_CANDIDATES:
-        try:
-            response = select(candidate.aid)
-            if isinstance(response, str):
-                data, sw1sw2 = b"", response
-            else:
-                data, sw1sw2 = response.data, response.sw1sw2
-            result = "APPLET_SELECTED" if sw1sw2 == "9000" else (
-                "APPLET_NOT_FOUND" if sw1sw2 == "6A82" else "INVALID_STATUS_WORD"
-            )
-            attempts.append(SelectAttempt(
-                candidate.aid,
-                candidate.source,
-                build_select_apdu(candidate.aid).hex().upper(),
-                data.hex().upper(),
-                sw1sw2[:2],
-                sw1sw2[2:],
-                sw1sw2,
-                result,
-            ))
-        except Exception as error:
-            attempts.append(SelectAttempt(
-                candidate.aid,
-                candidate.source,
-                build_select_apdu(candidate.aid).hex().upper(),
-                "",
-                "",
-                "",
-                "",
-                getattr(error, "code", "SELECT_FAILED"),
-            ))
+        for occurrence in ("first", "next"):
+            try:
+                response = select(candidate.aid, occurrence)
+                if isinstance(response, str):
+                    data, sw1sw2 = b"", response
+                else:
+                    data, sw1sw2 = response.data, response.sw1sw2
+                result = "APPLET_SELECTED" if sw1sw2 == "9000" else (
+                    "APPLET_NOT_FOUND" if sw1sw2 == "6A82" else "INVALID_STATUS_WORD"
+                )
+                attempts.append(SelectAttempt(
+                    candidate.aid,
+                    candidate.source,
+                    build_select_apdu(candidate.aid, occurrence=occurrence).hex().upper(),
+                    data.hex().upper(),
+                    sw1sw2[:2],
+                    sw1sw2[2:],
+                    sw1sw2,
+                    result,
+                    occurrence,
+                ))
+            except Exception as error:
+                attempts.append(SelectAttempt(
+                    candidate.aid,
+                    candidate.source,
+                    build_select_apdu(candidate.aid, occurrence=occurrence).hex().upper(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    getattr(error, "code", "SELECT_FAILED"),
+                    occurrence,
+                ))
+            if attempts[-1].result != "APPLET_SELECTED":
+                break
     fatal = next(
         (
             attempt.result
@@ -109,13 +114,14 @@ def resolve_aid(select: Callable[[str], Any], mode: str = "SIMULATED") -> dict[s
         None,
     )
     if fatal is not None:
-        result, selected, simulated = fatal, None, None
+        result, selected, simulated, aid_resolution = fatal, None, None, None
     else:
-        result, selected, simulated = decide_aid(attempts, mode)
+        result, selected, simulated, aid_resolution = decide_aid(attempts, mode)
     return {
         "result": result,
         "selected_aid": selected,
         "simulated_selected_aid": simulated,
+        "aid_resolution": aid_resolution,
         "attempts": [asdict(attempt) for attempt in attempts],
         "mode": mode,
         "recovery": "QUERY_REQUIRED" if fatal is not None else None,
@@ -184,8 +190,8 @@ def prepare_physical_session(
         events.append({"stage": "CONNECTED", "protocol": connection.protocol})
         report["protocol"] = connection.protocol
 
-        def select(aid: str):
-            return adapter.transmit(connection, build_select_apdu(aid))
+        def select(aid: str, occurrence: str = "first"):
+            return adapter.transmit(connection, build_select_apdu(aid, occurrence=occurrence))
 
         resolution = resolve_aid(select, report["mode"])
         report["aid_resolution"] = resolution

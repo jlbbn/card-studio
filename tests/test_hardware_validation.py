@@ -7,7 +7,14 @@ from pathlib import Path
 
 from card_studio.applet import APPLET_AID_CANDIDATES
 from card_studio.dry_run import DryRunAdapter
-from card_studio.hardware_validation import HardwareValidator, choose_reader, validation_summary, write_evidence
+from card_studio.hardware_validation import (
+    HardwareValidator,
+    SelectAttempt,
+    choose_reader,
+    decide_aid,
+    validation_summary,
+    write_evidence,
+)
 from card_studio.readiness import run_readiness
 
 
@@ -16,7 +23,9 @@ class HardwareValidationTests(unittest.TestCase):
         expected = {
             "aid1-selected": "SIMULATED_MATCH",
             "aid2-selected": "SIMULATED_MATCH",
-            "multiple": "MULTIPLE_AID_MATCH",
+            "multiple": "SIMULATED_MATCH",
+            "multiple-occurrences": "MULTIPLE_AID_MATCH",
+            "distinct-data": "MULTIPLE_AID_MATCH",
             "not-found": "APPLET_NOT_FOUND",
             "reader-absent": "HARDWARE_NOT_CONNECTED",
             "card-absent": "CARD_NOT_PRESENT",
@@ -37,6 +46,42 @@ class HardwareValidationTests(unittest.TestCase):
                     self.assertTrue(report["disconnect_clean"])
                     self.assertEqual(json.loads(path.read_text())["result"], result)
 
+        # Regresiones de resolución de AIDs solapados (decide_aid).
+        short = "D4534C504D44"
+        long = "D4534C504D4401"
+
+        def pair(aid, next_result="APPLET_NOT_FOUND", data=""):
+            return [
+                SelectAttempt(aid, "test", "", data, "90", "00", "9000", "APPLET_SELECTED", "first"),
+                SelectAttempt(aid, "test", "", data, "6A", "82", "6A82", next_result, "next"),
+            ]
+
+        cases = (
+            ("prefix-collapsed", pair(long) + pair(short),
+             ("PHYSICALLY_CONFIRMED", long, None, "PREFIX_COLLAPSED")),
+            ("distinct-aids", pair(long) + pair("A0000000031010"),
+             ("MULTIPLE_AID_MATCH", None, None, "AMBIGUOUS")),
+            ("second-occurrence", pair(long) + [
+                SelectAttempt(short, "test", "", "", "90", "00", "9000", "APPLET_SELECTED", "first"),
+                SelectAttempt(short, "test", "", "01", "90", "00", "9000", "APPLET_SELECTED", "next"),
+            ], ("MULTIPLE_AID_MATCH", None, None, "MULTIPLE_OCCURRENCES")),
+            ("none-found", [
+                SelectAttempt(long, "test", "", "", "6A", "82", "6A82", "APPLET_NOT_FOUND", "first"),
+                SelectAttempt(short, "test", "", "", "6A", "82", "6A82", "APPLET_NOT_FOUND", "first"),
+            ], ("APPLET_NOT_FOUND", None, None, None)),
+            ("only-short", [
+                SelectAttempt(long, "test", "", "", "6A", "82", "6A82", "APPLET_NOT_FOUND", "first"),
+            ] + pair(short), ("PHYSICALLY_CONFIRMED", short, None, "UNIQUE")),
+            ("only-long", pair(long) + [
+                SelectAttempt(short, "test", "", "", "6A", "82", "6A82", "APPLET_NOT_FOUND", "first"),
+            ], ("PHYSICALLY_CONFIRMED", long, None, "UNIQUE")),
+            ("different-responses", pair(long, data="AA") + pair(short, data="BB"),
+             ("MULTIPLE_AID_MATCH", None, None, "AMBIGUOUS")),
+        )
+        for label, attempts, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(decide_aid(attempts, "PHYSICAL"), expected)
+
     def test_dry_run_selection_never_becomes_physical(self):
         with tempfile.TemporaryDirectory() as directory:
             for scenario, aid in [("aid1-selected", "D4534C504D4401"), ("aid2-selected", "D4534C504D44")]:
@@ -54,7 +99,8 @@ class HardwareValidationTests(unittest.TestCase):
             stored = json.loads(path.read_text())
             for field in ["timestamp", "application_version", "platform", "architecture", "mode", "reader_name", "card_detected", "atr", "aid_candidates", "select_attempts", "selected_aid", "result"]:
                 self.assertIn(field, stored)
-            self.assertEqual(len(stored["select_attempts"]), len(APPLET_AID_CANDIDATES))
+            first_attempts = [item for item in stored["select_attempts"] if item["occurrence"] == "first"]
+            self.assertEqual(len(first_attempts), len(APPLET_AID_CANDIDATES))
             self.assertEqual(stat.S_IMODE(os.stat(path).st_mode), 0o600)
             self.assertEqual(report["sw1sw2"] if "sw1sw2" in report else stored["select_attempts"][0]["sw1sw2"], "9000")
 

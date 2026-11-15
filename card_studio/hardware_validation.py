@@ -28,6 +28,7 @@ class SelectAttempt:
     sw2: str
     sw1sw2: str
     result: str
+    occurrence: str = "first"
 
 
 def choose_reader(readers: list[str], preferred: str = "") -> tuple[str | None, str | None]:
@@ -51,22 +52,70 @@ def choose_reader(readers: list[str], preferred: str = "") -> tuple[str | None, 
     return None, "MULTIPLE_READERS"
 
 
-def decide_aid(attempts: list[SelectAttempt], mode: str) -> tuple[str, str | None, str | None]:
-    selected = [attempt for attempt in attempts if attempt.result == "APPLET_SELECTED"]
-    if len(selected) > 1:
-        return "MULTIPLE_AID_MATCH", None, None
-    if len(selected) == 1:
-        others = [attempt for attempt in attempts if attempt.aid != selected[0].aid]
+def decide_aid(attempts: list[SelectAttempt], mode: str) -> tuple[str, str | None, str | None, str | None]:
+    by_aid: dict[str, dict[str, SelectAttempt]] = {}
+    for attempt in attempts:
+        by_aid.setdefault(attempt.aid, {})[attempt.occurrence] = attempt
+
+    first_selected = [
+        attempt for attempt in attempts
+        if attempt.occurrence == "first" and attempt.result == "APPLET_SELECTED"
+    ]
+    if len(first_selected) > 1:
+        if any(
+            by_aid[attempt.aid].get("next") is not None
+            and by_aid[attempt.aid]["next"].result == "APPLET_SELECTED"
+            for attempt in first_selected
+        ):
+            return "MULTIPLE_AID_MATCH", None, None, "MULTIPLE_OCCURRENCES"
+        canonical = _collapse_prefix_matches(by_aid, first_selected)
+        if canonical is not None:
+            if mode == "PHYSICAL":
+                return "PHYSICALLY_CONFIRMED", canonical.aid, None, "PREFIX_COLLAPSED"
+            return "SIMULATED_MATCH", None, canonical.aid, "PREFIX_COLLAPSED"
+        return "MULTIPLE_AID_MATCH", None, None, "AMBIGUOUS"
+    if len(first_selected) == 1:
+        aid = first_selected[0].aid
+        next_attempt = by_aid[aid].get("next")
+        if next_attempt is not None and next_attempt.result == "APPLET_SELECTED":
+            return "MULTIPLE_AID_MATCH", None, None, "MULTIPLE_OCCURRENCES"
+        others = [attempt for attempt in attempts if attempt.occurrence == "first" and attempt.aid != aid]
         if all(attempt.result == "APPLET_NOT_FOUND" for attempt in others):
             if mode == "PHYSICAL":
-                return "PHYSICALLY_CONFIRMED", selected[0].aid, None
-            return "SIMULATED_MATCH", None, selected[0].aid
-        return "INCONCLUSIVE", None, None
-    if attempts and all(attempt.result == "APPLET_NOT_FOUND" for attempt in attempts):
-        return "APPLET_NOT_FOUND", None, None
+                return "PHYSICALLY_CONFIRMED", aid, None, "UNIQUE"
+            return "SIMULATED_MATCH", None, aid, "UNIQUE"
+        return "INCONCLUSIVE", None, None, "AMBIGUOUS"
+    if attempts and all(attempt.result == "APPLET_NOT_FOUND" for attempt in attempts if attempt.occurrence == "first"):
+        return "APPLET_NOT_FOUND", None, None, None
     if attempts:
-        return attempts[0].result if attempts[0].result != "APPLET_SELECTED" else "INCONCLUSIVE", None, None
-    return "HARDWARE_VALIDATION_PENDING", None, None
+        return attempts[0].result, None, None, None
+    return "HARDWARE_VALIDATION_PENDING", None, None, None
+
+
+def _collapse_prefix_matches(
+    by_aid: dict[str, dict[str, SelectAttempt]],
+    first_selected: list[SelectAttempt],
+) -> SelectAttempt | None:
+    """Colapsa AIDs solapados (prefijo exacto) que apuntan al mismo applet.
+
+    Se colapsa cuando: cada AID tiene exactamente una ocurrencia (FIRST=9000
+    y NEXT=6A82), las respuestas de FIRST son equivalentes y todos son
+    prefijo del AID más largo. Devuelve el intent FIRST del AID canónico
+    (el más largo) o None si no es un colapso seguro.
+    """
+    aids = [attempt.aid for attempt in first_selected]
+    longest = max(aids, key=len)
+    if not all(aid == longest or longest.startswith(aid) for aid in aids):
+        return None
+    reference = by_aid[longest]["first"].response_data
+    for aid in aids:
+        first = by_aid[aid]["first"]
+        next_attempt = by_aid[aid].get("next")
+        if next_attempt is None or next_attempt.result != "APPLET_NOT_FOUND":
+            return None
+        if first.response_data != reference:
+            return None
+    return by_aid[longest]["first"]
 
 
 def _contains_forbidden_field(value: Any) -> bool:
@@ -91,30 +140,32 @@ def write_evidence(path: Path, report: dict[str, Any]) -> Path:
     return path
 
 
-def _attempt(candidate: Any, response: ApduResponse) -> SelectAttempt:
+def _attempt(candidate: Any, response: ApduResponse, occurrence: str = "first") -> SelectAttempt:
     status = interpret_select_response(response)
     return SelectAttempt(
         aid=candidate.aid,
         source=candidate.source,
-        select_apdu=build_select_apdu(candidate.aid).hex().upper(),
+        select_apdu=build_select_apdu(candidate.aid, occurrence=occurrence).hex().upper(),
         response_data=response.data.hex().upper(),
         sw1=f"{response.sw1:02X}",
         sw2=f"{response.sw2:02X}",
         sw1sw2=response.sw1sw2,
         result=status.result,
+        occurrence=occurrence,
     )
 
 
-def _failed_attempt(candidate: Any, error: CardError) -> SelectAttempt:
+def _failed_attempt(candidate: Any, error: CardError, occurrence: str = "first") -> SelectAttempt:
     return SelectAttempt(
         aid=candidate.aid,
         source=candidate.source,
-        select_apdu=build_select_apdu(candidate.aid).hex().upper(),
+        select_apdu=build_select_apdu(candidate.aid, occurrence=occurrence).hex().upper(),
         response_data="",
         sw1="",
         sw2="",
         sw1sw2="",
         result=error.code,
+        occurrence=occurrence,
     )
 
 
@@ -144,6 +195,7 @@ class HardwareValidator:
             "select_attempts": [],
             "selected_aid": None,
             "simulated_selected_aid": None,
+            "aid_resolution": None,
             "result": "HARDWARE_VALIDATION_PENDING",
             "physical_validation": "NOT_EXECUTED" if mode == "SIMULATED" else "PENDING",
             "disconnect_clean": False,
@@ -166,17 +218,31 @@ class HardwareValidator:
                 for candidate in APPLET_AID_CANDIDATES:
                     try:
                         response = self.adapter.selectApplet(candidate.aid)
-                        attempt = _attempt(candidate, response)
+                        attempt = _attempt(candidate, response, occurrence="first")
                     except CardError as error:
-                        attempt = _failed_attempt(candidate, error)
+                        attempt = _failed_attempt(candidate, error, occurrence="first")
                     attempts.append(attempt)
                     report["select_attempts"] = [asdict(item) for item in attempts]
                     if attempt.result in {"CARD_REMOVED", "TRANSMIT_TIMEOUT", "TRANSMIT_FAILED"}:
                         break
-                result, selected, simulated = decide_aid(attempts, mode)
+                    if attempt.result != "APPLET_SELECTED":
+                        continue
+                    # Solo lectura: verificar que existe una única ocurrencia
+                    # del AID (SELECT NEXT, P2=0x02). Nunca ejecuta escrituras.
+                    try:
+                        next_response = self.adapter.selectApplet(candidate.aid, occurrence="next")
+                        next_attempt = _attempt(candidate, next_response, occurrence="next")
+                    except CardError as error:
+                        next_attempt = _failed_attempt(candidate, error, occurrence="next")
+                    attempts.append(next_attempt)
+                    report["select_attempts"] = [asdict(item) for item in attempts]
+                    if next_attempt.result in {"CARD_REMOVED", "TRANSMIT_TIMEOUT", "TRANSMIT_FAILED"}:
+                        break
+                result, selected, simulated, aid_resolution = decide_aid(attempts, mode)
                 report["result"] = result
                 report["selected_aid"] = selected
                 report["simulated_selected_aid"] = simulated
+                report["aid_resolution"] = aid_resolution
                 if result == "PHYSICALLY_CONFIRMED":
                     report["physical_validation"] = "PASS"
                 elif result not in {"HARDWARE_VALIDATION_PENDING"}:
@@ -212,6 +278,8 @@ def validation_summary(report: dict[str, Any]) -> str:
     ]
     if report.get("selected_aid"):
         lines.append(f"AID: {report['selected_aid']}")
+    if report.get("aid_resolution"):
+        lines.append(f"Resolución de AID: {report['aid_resolution']}")
     if report.get("simulated_selected_aid"):
         lines.append(f"SIMULATED AID: {report['simulated_selected_aid']}")
     sw_values = [attempt["sw1sw2"] for attempt in report.get("select_attempts", []) if attempt["sw1sw2"]]

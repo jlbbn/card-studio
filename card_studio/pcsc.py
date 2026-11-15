@@ -174,8 +174,8 @@ class PcscBackend(ApduCardBackend):
                 raise CardError("TRANSMIT_TIMEOUT", "La tarjeta no respondió dentro del tiempo permitido.") from exc
             raise CardError("TRANSMIT_FAILED", f"La transmisión APDU falló: {exc}") from exc
 
-    def selectApplet(self, aid: str | None = None) -> ApduResponse:
-        command = build_select_apdu(aid or APPLET_AID_CANDIDATES[0].aid)
+    def selectApplet(self, aid: str | None = None, occurrence: str = "first") -> ApduResponse:
+        command = build_select_apdu(aid or APPLET_AID_CANDIDATES[0].aid, occurrence=occurrence)
         return self.transmit(command)
 
     def disconnect(self) -> None:

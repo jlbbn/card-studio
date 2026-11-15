@@ -60,14 +60,17 @@ STATUS_WORDS = {
 }
 
 
-def build_select_apdu(aid: str) -> bytes:
+def build_select_apdu(aid: str, occurrence: str = "first") -> bytes:
     normalized = aid.strip().upper()
     if not re.fullmatch(r"[0-9A-F]+", normalized) or len(normalized) % 2:
         raise CardError("INVALID_APDU", "El AID debe contener bytes hexadecimales completos.")
     data = bytes.fromhex(normalized)
     if not 5 <= len(data) <= 16:
         raise CardError("INVALID_APDU", "El AID debe medir entre 5 y 16 bytes.")
-    return bytes([0x00, 0xA4, 0x04, 0x00, len(data)]) + data
+    p2 = {"first": 0x00, "next": 0x02}.get(occurrence)
+    if p2 is None:
+        raise CardError("INVALID_APDU", "Ocurrencia de SELECT inválida; use 'first' o 'next'.")
+    return bytes([0x00, 0xA4, 0x04, p2, len(data)]) + data
 
 
 def parse_apdu_response(response: bytes | bytearray | Iterable[int]) -> ApduResponse:
