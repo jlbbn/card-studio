@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "timestamp": "2026-11-15T14:17:46.785640Z",
+  "application_version": "1.2.0",
+  "build": "1",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "mode": "PHYSICAL",
+  "software_readiness": "PASS",
+  "pcsc_available": true,
+  "reader_name": "Alcor Micro AU9540 00 00",
+  "reader_detected": true,
+  "reader_names": [
+    "Alcor Micro AU9540 00 00"
+  ],
+  "card_detected": true,
+  "atr": "3BF81300008131FE454A434F5076323431B7",
+  "aid_candidates": [
+    {
+      "aid": "D4534C504D4401",
+      "source": "PC/SC / Cardpeek"
+    },
+    {
+      "aid": "D4534C504D44",
+      "source": "Android Card Bridge"
+    }
+  ],
+  "select_attempts": [
+    {
+      "aid": "D4534C504D4401",
+      "source": "PC/SC / Cardpeek",
+      "select_apdu": "00A4040007D4534C504D4401",
+      "response_data": "",
+      "sw1": "90",
+      "sw2": "00",
+      "sw1sw2": "9000",
+      "result": "APPLET_SELECTED",
+      "occurrence": "first"
+    },
+    {
+      "aid": "D4534C504D4401",
+      "source": "PC/SC / Cardpeek",
+      "select_apdu": "00A4040207D4534C504D4401",
+      "response_data": "",
+      "sw1": "6A",
+      "sw2": "82",
+      "sw1sw2": "6A82",
+      "result": "APPLET_NOT_FOUND",
+      "occurrence": "next"
+    },
+    {
+      "aid": "D4534C504D44",
+      "source": "Android Card Bridge",
+      "select_apdu": "00A4040006D4534C504D44",
+      "response_data": "",
+      "sw1": "90",
+      "sw2": "00",
+      "sw1sw2": "9000",
+      "result": "APPLET_SELECTED",
+      "occurrence": "first"
+    },
+    {
+      "aid": "D4534C504D44",
+      "source": "Android Card Bridge",
+      "select_apdu": "00A4040206D4534C504D44",
+      "response_data": "",
+      "sw1": "6A",
+      "sw2": "82",
+      "sw1sw2": "6A82",
+      "result": "APPLET_NOT_FOUND",
+      "occurrence": "next"
+    }
+  ],
+  "selected_aid": "D4534C504D4401",
+  "simulated_selected_aid": null,
+  "aid_resolution": "PREFIX_COLLAPSED",
+  "result": "PHYSICALLY_CONFIRMED",
+  "physical_validation": "PASS",
+  "disconnect_clean": true
+}
