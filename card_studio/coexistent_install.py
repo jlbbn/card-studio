@@ -131,9 +131,9 @@ def inspect_cap(cap_path: Path, gp_jar: Path) -> dict[str, Any]:
 
 
 def prepare_install(cap_path: Path, gp_jar: Path, registry_path: Path, *, require_live: bool = False) -> dict[str, Any]:
-    cap = inspect_cap(cap_path, gp_jar)
     registry = load_registry(registry_path)
     validation = validate_registry(registry, require_live=require_live)
+    cap = inspect_cap(cap_path, gp_jar)
     return {
         "schema_version": 1,
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
