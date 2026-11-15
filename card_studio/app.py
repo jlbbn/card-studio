@@ -17,6 +17,7 @@ from .backends import CardBackend, CardpeekBackend, SunmiBackend, VirtualCardBac
 from .transactions.view import readiness_view, transaction_view
 from .config import AppSettings, SettingsStore
 from .cardlab_adapter import load_cardlab_status
+from .registry_capture import load_registry_status
 from .diagnostics import collect_diagnostics, format_diagnostics
 from .dry_run import DryRunAdapter
 from .hardware_validation import HardwareValidator, validation_summary
@@ -77,6 +78,13 @@ class CardStudioWindow(Adw.ApplicationWindow):
             lambda _button: self._show_cardlab(),
         )
         header.pack_end(self.cardlab_button)
+
+        self.registry_button = Gtk.Button.new_with_label("Registry")
+        self.registry_button.connect(
+            "clicked",
+            lambda _button: self._show_registry(),
+        )
+        header.pack_end(self.registry_button)
 
         self.l3_readiness_button = Gtk.Button.new_with_label("EMV / L3 Readiness")
         self.l3_readiness_button.connect("clicked", lambda _button: self._show_l3_readiness())
@@ -351,7 +359,7 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self.reader_name, self.api_health_button, self.detect_button, self.read_button,
             self.sync_button, self.write_button, self.reload_button, self.charge_button,
             self.save_settings_button, self.diagnostics_button, self.hardware_validation_button,
-            self.cardlab_button,
+            self.cardlab_button, self.registry_button,
         ]:
             widget.set_sensitive(idle)
         self.transport_label.set_visible(physical)
@@ -533,6 +541,35 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self._toast(f"Transacción actualizada: {action}")
 
         self._run_async(work, success)
+
+
+    def _show_registry(self) -> None:
+        def success(report: dict[str, Any]) -> None:
+            body = (
+                f"Status:          {report['status']}\n"
+                f"Result:          {report['result']}\n"
+                f"Mode:            {report['mode']}\n\n"
+                f"CARDLAB REGISTRY\n"
+                f"Package AID:     {report['package_aid']}\n"
+                f"Package present: {report['package_present']}\n"
+                f"Applet AID:      {report['applet_aid']}\n"
+                f"Applet present:  {report['applet_present']}\n\n"
+                f"Read only:       {report['physical_modification']}\n"
+                f"Auth signal:     {report['authentication_signal']}\n"
+                f"Secret stored:   {report['authentication_secret_recorded']}\n\n"
+                f"Captured: {report.get('captured_at') or 'N/A'}\n"
+                f"Evidence: {report['source_evidence']}"
+            )
+
+            dialog = Adw.MessageDialog(
+                transient_for=self,
+                heading="GlobalPlatform Registry · Read Only",
+                body=body,
+            )
+            dialog.add_response("ok", "Aceptar")
+            dialog.present()
+
+        self._run_async(load_registry_status, success)
 
     def _show_cardlab(self) -> None:
         def success(report: dict[str, Any]) -> None:

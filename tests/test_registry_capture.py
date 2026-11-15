@@ -12,6 +12,7 @@ from card_studio.registry_capture import (
     build_registry_command,
     capture_registry,
     detect_authentication_signal,
+    load_registry_status,
     parse_registry_text,
     summarize_cardlab,
 )
@@ -183,3 +184,39 @@ def test_card_studio_cli_exposes_registry_status():
     assert args.execute is False
     assert args.confirm_registry == ""
     assert args.evidence is not None
+
+
+
+def test_load_registry_status_from_physical_evidence(
+    tmp_path: Path,
+):
+    evidence = tmp_path / "registry.json"
+
+    evidence.write_text(
+        """{
+  "schema": "globalplatform-registry-evidence/v2",
+  "mode": "LIVE_READ_ONLY",
+  "captured_at": "2026-11-15T04:00:00Z",
+  "physical_modification": "NOT_EXECUTED",
+  "authentication_signal": "GPPRO_DEFAULT_KEY_FALLBACK_OBSERVED",
+  "authentication_secret_recorded": false,
+  "result": "CARDLAB_REGISTRY_CONFIRMED",
+  "cardlab": {
+    "package_aid": "D4534C504D47",
+    "applet_aid": "D4534C504D4701",
+    "package_present": true,
+    "applet_present": true,
+    "cardlab_registry_confirmed": true
+  }
+}""",
+        encoding="utf-8",
+    )
+
+    report = load_registry_status(evidence)
+
+    assert report["status"] == "PASS"
+    assert report["cardlab_registry_confirmed"] is True
+    assert report["package_aid"] == "D4534C504D47"
+    assert report["applet_aid"] == "D4534C504D4701"
+    assert report["physical_modification"] == "NOT_EXECUTED"
+    assert report["authentication_secret_recorded"] is False

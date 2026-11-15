@@ -260,6 +260,86 @@ def capture_registry(
     return report
 
 
+
+def load_registry_status(
+    evidence_path: Path = DEFAULT_EVIDENCE,
+) -> dict[str, Any]:
+    path = Path(evidence_path)
+
+    try:
+        document = json.loads(
+            path.read_text(encoding="utf-8")
+        )
+    except OSError as error:
+        raise CardError(
+            "REGISTRY_EVIDENCE_NOT_READABLE",
+            "No se pudo leer la evidencia GlobalPlatform.",
+        ) from error
+    except json.JSONDecodeError as error:
+        raise CardError(
+            "REGISTRY_EVIDENCE_INVALID_JSON",
+            "La evidencia GlobalPlatform no contiene JSON válido.",
+        ) from error
+
+    if document.get("schema") != SCHEMA:
+        raise CardError(
+            "REGISTRY_EVIDENCE_SCHEMA_MISMATCH",
+            "La evidencia GlobalPlatform usa un esquema inesperado.",
+        )
+
+    if document.get("mode") != "LIVE_READ_ONLY":
+        raise CardError(
+            "REGISTRY_EVIDENCE_MODE_MISMATCH",
+            "La evidencia no corresponde a una lectura física read-only.",
+        )
+
+    if document.get("physical_modification") != "NOT_EXECUTED":
+        raise CardError(
+            "REGISTRY_EVIDENCE_MODIFICATION_INVALID",
+            "La evidencia no garantiza ausencia de modificación física.",
+        )
+
+    cardlab = document.get("cardlab")
+
+    if not isinstance(cardlab, dict):
+        raise CardError(
+            "REGISTRY_CARDLAB_STATUS_MISSING",
+            "La evidencia no contiene el estado CardLab.",
+        )
+
+    confirmed = bool(
+        cardlab.get("package_present")
+        and cardlab.get("applet_present")
+        and cardlab.get("cardlab_registry_confirmed")
+    )
+
+    return {
+        "schema": "card-studio-registry-status/v1",
+        "status": "PASS" if confirmed else "FAIL",
+        "result": document.get("result"),
+        "mode": document.get("mode"),
+        "captured_at": document.get("captured_at"),
+        "package_aid": cardlab.get("package_aid"),
+        "applet_aid": cardlab.get("applet_aid"),
+        "package_present": bool(cardlab.get("package_present")),
+        "applet_present": bool(cardlab.get("applet_present")),
+        "cardlab_registry_confirmed": confirmed,
+        "authentication_signal": document.get(
+            "authentication_signal",
+            "UNKNOWN",
+        ),
+        "authentication_secret_recorded": bool(
+            document.get(
+                "authentication_secret_recorded",
+                False,
+            )
+        ),
+        "physical_modification": document.get(
+            "physical_modification"
+        ),
+        "source_evidence": str(path),
+    }
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
         description=(
