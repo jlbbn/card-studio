@@ -16,6 +16,7 @@ from .application import CardStudioApplication as TransactionApplication
 from .backends import CardBackend, CardpeekBackend, SunmiBackend, VirtualCardBackend
 from .transactions.view import readiness_view, transaction_view
 from .config import AppSettings, SettingsStore
+from .cardlab_adapter import load_cardlab_status
 from .diagnostics import collect_diagnostics, format_diagnostics
 from .dry_run import DryRunAdapter
 from .hardware_validation import HardwareValidator, validation_summary
@@ -70,6 +71,13 @@ class CardStudioWindow(Adw.ApplicationWindow):
         title = Gtk.Label(label=f"Card Studio {__version__} · build {__build__}")
         title.add_css_class("title")
         header.set_title_widget(title)
+        self.cardlab_button = Gtk.Button.new_with_label("CardLab")
+        self.cardlab_button.connect(
+            "clicked",
+            lambda _button: self._show_cardlab(),
+        )
+        header.pack_end(self.cardlab_button)
+
         self.l3_readiness_button = Gtk.Button.new_with_label("EMV / L3 Readiness")
         self.l3_readiness_button.connect("clicked", lambda _button: self._show_l3_readiness())
         header.pack_end(self.l3_readiness_button)
@@ -343,6 +351,7 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self.reader_name, self.api_health_button, self.detect_button, self.read_button,
             self.sync_button, self.write_button, self.reload_button, self.charge_button,
             self.save_settings_button, self.diagnostics_button, self.hardware_validation_button,
+            self.cardlab_button,
         ]:
             widget.set_sensitive(idle)
         self.transport_label.set_visible(physical)
@@ -456,9 +465,19 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self.transaction_list.remove(child)
         transactions = self.transaction_application.list_transactions(20)
         readiness = readiness_view(self.transaction_application.l3_readiness())
+        try:
+            cardlab = load_cardlab_status()
+            cardlab_text = (
+                f" · CARDLAB {cardlab['state']}"
+                f" · APPLET {cardlab['applet_aid']}"
+            )
+        except Exception:
+            cardlab_text = " · CARDLAB UNAVAILABLE"
+
         self.l3_summary.set_text(
             f"LAB READINESS: {readiness['lab_readiness']} · certification {readiness['certification']}"
             f" · physical {readiness['physical_validation']}"
+            f"{cardlab_text}"
         )
         if not transactions:
             self.transaction_list.append(Gtk.Label(label="Sin transacciones LAB", xalign=0))
@@ -514,6 +533,42 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self._toast(f"Transacción actualizada: {action}")
 
         self._run_async(work, success)
+
+    def _show_cardlab(self) -> None:
+        def success(report: dict[str, Any]) -> None:
+            software = report["software"]
+            physical = report["physical"]
+
+            body = (
+                f"Status:          {report['status']}\n"
+                f"State:           {report['state']}\n"
+                f"Package AID:     {report['package_aid']}\n"
+                f"Applet AID:      {report['applet_aid']}\n\n"
+                f"SOFTWARE\n"
+                f"Regression:      {software['regression']}\n"
+                f"CAP:             {software['cap']}\n"
+                f"VerifyCAP:       {software['verifycap']}\n"
+                f"jCardSim:        {software['jcardsim']}\n"
+                f"Container:       {software['container']}\n\n"
+                f"PHYSICAL\n"
+                f"SELECT:          {physical['select']}\n"
+                f"GET_INFO:        {physical['get_info']}\n"
+                f"GET_STATUS:      {physical['get_status']}\n"
+                f"READ_CONTAINER:  {physical['read_container']}\n\n"
+                f"Reader: {report.get('reader') or 'N/A'}\n"
+                f"Evidence: {report['source_evidence']}"
+            )
+
+            dialog = Adw.MessageDialog(
+                transient_for=self,
+                heading="CardLab · Physical Validation",
+                body=body,
+            )
+            dialog.add_response("ok", "Aceptar")
+            dialog.present()
+
+        self._run_async(load_cardlab_status, success)
+
 
     def _show_l3_readiness(self) -> None:
         report = readiness_view(self.transaction_application.l3_readiness())

@@ -9,6 +9,7 @@ from typing import Any
 from .application import CardStudioApplication as TransactionApplication
 from .backends import CardpeekBackend, SunmiBackend, VirtualCardBackend
 from .config import AppSettings, SettingsStore
+from .cardlab_adapter import DEFAULT_EVIDENCE, load_cardlab_status
 from .host.base import HostError
 from .money import Money
 from .transactions.model import TransactionError, TransactionRequest
@@ -68,6 +69,8 @@ def parser() -> argparse.ArgumentParser:
     hardware.add_argument("--scenario", default="aid1-selected")
     hardware.add_argument("--evidence", type=Path)
     commands.add_parser("physical-prepare")
+    cardlab = commands.add_parser("cardlab-status")
+    cardlab.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
 
     transaction = commands.add_parser("transaction")
     transaction_commands = transaction.add_subparsers(dest="transaction_command", required=True)
@@ -288,6 +291,11 @@ def main(argv: list[str]) -> int:
         if args.command == "diagnose":
             emit(collect_diagnostics(settings, check_api=args.check_api))
             return 0
+        if args.command == "cardlab-status":
+            report = load_cardlab_status(args.evidence)
+            emit(report)
+            return 0 if report["status"] == "PASS" else 2
+
         if args.command == "hardware-status":
             report = initialize_application(settings_store)
             report["settings"] = report["settings"].to_dict()
