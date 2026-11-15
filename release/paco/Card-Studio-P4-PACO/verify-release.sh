@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SOURCE_ONLY=0
+if [[ "${1:-}" == "--source-only" ]]; then
+    SOURCE_ONLY=1
+fi
+
 ROOT="$(cd -- "$(dirname -- "$0")" && pwd)"
 DMG="$ROOT/Card-Studio-P4-PACO.dmg"
 MANIFEST="$ROOT/release-manifest.json"
@@ -10,7 +15,134 @@ if [[ ! -d "$APP" && -d "$ROOT/Card Studio.app" ]]; then APP="$ROOT/Card Studio.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/card-studio-paco-verify.XXXXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 FAIL=0
-fail() { echo "[FAIL] $1" >&2; FAIL=1; }
+fail() { 
+if [[ "$SOURCE_ONLY" == "1" ]]; then
+    ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+    python3 - <<'PY2'
+import json
+from pathlib import Path
+
+root = Path.cwd()
+
+required = [
+    "README-PACO.md",
+    "paco_release.py",
+    "build-macos.sh",
+    "compare-release.sh",
+    "verify-release.sh",
+    "card-studio-paco.spec",
+    "release-manifest.json",
+    "source-freeze.json",
+    "SBOM.json",
+    "requirements.txt",
+    "requirements-build.txt",
+    "requirements-p3-lock.txt",
+    "requirements-p4-lock.txt",
+    "requirements-paco-macos.lock",
+    "requirements-postgres.txt",
+    "config.example",
+    ".env.example",
+    "source/TRANSFER-MANIFEST.json",
+]
+
+missing = [name for name in required if not (root / name).exists()]
+if missing:
+    raise SystemExit("SOURCE_REQUIRED_MISSING: " + ", ".join(missing))
+
+for name in (
+    "release-manifest.json",
+    "source-freeze.json",
+    "SBOM.json",
+    "source/TRANSFER-MANIFEST.json",
+    "evidence/clean-source-validation.json",
+    "evidence/verifier-self-test.json",
+):
+    json.loads((root / name).read_text(encoding="utf-8"))
+
+print("SOURCE_STRUCTURE: PASS")
+print("SOURCE_JSON: PASS")
+PY2
+
+    python3 -m py_compile "$ROOT/paco_release.py"
+
+    bash -n "$ROOT/build-macos.sh"
+    bash -n "$ROOT/compare-release.sh"
+    bash -n "$ROOT/verify-release.sh"
+
+    if ! ROOT="$ROOT" python3 - <<'PY3'
+import os
+from pathlib import Path
+
+root = Path(os.environ["ROOT"])
+
+patterns = (
+    "/home/admin1",
+    "/home/",
+    "/tmp/card-studio",
+    "release/paco/source/",
+)
+
+allowed_suffixes = {
+    ".py",
+    ".sh",
+    ".spec",
+    ".example",
+    ".txt",
+    ".json",
+    ".md",
+    ".lock",
+}
+
+leaks = []
+
+for path in root.rglob("*"):
+    if not path.is_file():
+        continue
+
+    if path.name in {"verify-release.sh", "paco_release.py"}:
+        continue
+
+    if path.suffix not in allowed_suffixes:
+        continue
+
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        continue
+
+    for pattern in patterns:
+        if pattern in text:
+            leaks.append((path.relative_to(root), pattern))
+
+if leaks:
+    for path, pattern in leaks:
+        print(f"PATH_LEAK: {path}: {pattern}")
+    raise SystemExit(1)
+
+print("SOURCE_PATH_SCAN: PASS")
+PY3
+    then
+        echo "[FAIL] Local path leak detected"
+        exit 1
+    fi
+
+    echo
+    echo "CARD STUDIO PACO SOURCE-ONLY VERIFICATION"
+    echo "Source structure: PASS"
+    echo "JSON metadata: PASS"
+    echo "Tooling syntax: PASS"
+    echo "Local path leaks: PASS"
+    exit 0
+fi
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "[FAIL] Full release verification requires macOS"
+    echo "Use: $0 --source-only"
+    exit 2
+fi
+
+echo "[FAIL] $1" >&2; FAIL=1; }
 pass() { echo "[PASS] $1"; }
 
 [[ "$(uname -s)" == "Darwin" ]] || fail "Se requiere macOS"
