@@ -1,0 +1,6 @@
+Package AID: D4534C504D46
+Applet AID: D4534C504D4601
+CAP SHA256: 2ac47a346242e2371974c3177a2ab114d837222ff92141103301c13fa5ddde30
+LFDB SHA256: 0b40186839c28b31e9b21b06486c6d18a9a451d83f1db8b1dafcee0e385bbe98
+Build result: conversion completed with 0 errors and 0 warnings
+Physical write validation: PASS
