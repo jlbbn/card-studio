@@ -2,7 +2,6 @@ import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 
 from card_studio.model import CardError
 from card_studio.registry_capture import (
@@ -134,14 +133,14 @@ def test_failure_does_not_retry(
             stderr="failure",
         )
 
-    with pytest.raises(CardError) as caught:
+    with unittest.TestCase().assertRaises(CardError) as caught:
         capture_registry(
             evidence,
             gp_executable="/fake/gp",
             runner=runner,
         )
 
-    assert caught.value.code == "REGISTRY_READ_FAILED"
+    assert caught.exception.code == "REGISTRY_READ_FAILED"
     assert len(calls) == 1
     assert evidence.exists() is False
 
@@ -161,14 +160,14 @@ def test_timeout_does_not_retry(
             120,
         )
 
-    with pytest.raises(CardError) as caught:
+    with unittest.TestCase().assertRaises(CardError) as caught:
         capture_registry(
             evidence,
             gp_executable="/fake/gp",
             runner=runner,
         )
 
-    assert caught.value.code == "REGISTRY_TIMEOUT"
+    assert caught.exception.code == "REGISTRY_TIMEOUT"
     assert len(calls) == 1
     assert evidence.exists() is False
 
