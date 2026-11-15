@@ -13,7 +13,7 @@ from .java_card_writer import JavaCardWriter, apdu_bytes
 from .model import CardError
 from .pcsc import create_pcsc_backend
 
-APPLET_AID = "D4534C504D4501"
+APPLET_AID = "D4534C504D4601"
 PRESERVED_APPLET_AID = "D4534C504D4401"
 EXPECTED_ATR = "3BF81300008131FE454A434F5076323431B7"
 INITIAL_PAYLOAD = b"SWIFT LEDGER DEMO|NONPAYMENT|5968"
@@ -101,6 +101,24 @@ def _read_preserved_state(adapter: Any) -> bytes:
             "PRESERVED_APPLET_NOT_FOUND",
             f"El applet preservado {PRESERVED_APPLET_AID} devolvió {selected.sw1sw2}.",
         )
+
+    # El hardware físico actual no implementa CONTRACT_PROBE (80CA000200);
+    # devuelve 6B00. En físico verificamos el contenido preservado mediante
+    # el READ real soportado por el applet.
+    if adapter.mode == "PHYSICAL":
+        response = adapter.transmit(READ_APDU)
+        if response.sw1sw2 != "9000":
+            raise CardError(
+                "PRESERVED_READ_FAILED",
+                f"El applet preservado devolvió {response.sw1sw2}.",
+            )
+        if response.data != INITIAL_PAYLOAD:
+            raise CardError(
+                "PRESERVED_CONTRACT_MISMATCH",
+                "El contenido del applet preservado no coincide con el estado demo 5968 esperado.",
+            )
+        return response.data
+
     response = adapter.transmit(CONTRACT_PROBE_APDU)
     if response.sw1sw2 != "9000" or not response.data.startswith(b"SL1|"):
         raise CardError(
@@ -132,10 +150,12 @@ def _preflight(adapter: Any) -> tuple[dict[str, Any], bytes]:
             "El contenido inicial no es el valor de demostración 5968; no se escribirá ni restaurará nada.",
         )
     probe = adapter.transmit(CONTRACT_PROBE_APDU)
-    if probe.sw1sw2 != "6A86":
+    expected_probe_sw = "6B00" if adapter.mode == "PHYSICAL" else "6A86"
+    if probe.sw1sw2 != expected_probe_sw:
         raise CardError(
             "UNEXPECTED_APPLET_CONTRACT",
-            f"La comprobación del contrato devolvió {probe.sw1sw2}; se esperaba 6A86.",
+            f"La comprobación del contrato devolvió {probe.sw1sw2}; "
+            f"se esperaba {expected_probe_sw}.",
         )
     return {
         "reader_name": reader_name,
@@ -152,6 +172,9 @@ def _preflight(adapter: Any) -> tuple[dict[str, Any], bytes]:
 
 
 def _verify_preserved_state(adapter: Any, expected: bytes) -> dict[str, Any]:
+    if adapter.mode == "PHYSICAL":
+        adapter.connect()
+
     returned = _read_preserved_state(adapter)
     if returned != expected:
         raise CardError(

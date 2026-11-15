@@ -12,15 +12,16 @@ from typing import Any
 
 from .hardware_validation import write_evidence
 from .model import CardError
-from .write_exercise import APPLET_AID, PRESERVED_APPLET_AID
+from .write_exercise import PRESERVED_APPLET_AID
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CAP = ROOT / "javacard-demo/build-coexistent/payment-demo.cap"
 DEFAULT_GP_JAR = ROOT / "vendor/GlobalPlatformPro-next/tool/target/gp.jar"
 PACKAGE_AID = "D4534C504D45"
+APPLET_AID = "D4534C504D4501"
 PRESERVED_PACKAGE_AID = "D4534C504D44"
-CAP_SHA256 = "d2a0cedc47199977421cede7d441a96827742a3685547461f874380c819c8d93"
-LFDB_SHA256 = "e6c4e1bf93637fa8426cea14315fd7207d7c7dca686ab22c2f6f6ca54be3dd52"
+CAP_SHA256 = "8a8d0e2acab8c12644c8ccf7fd291ca94f5c9f3fcd5c6f466fbc0f6933c244d2"
+LFDB_SHA256 = "18d3ef9fe09593e1d4ccbf76184c413ec4da3709c1ad2e155c5024ee63775f26"
 CONFIRMATION = "INSTALAR_CAP_COEXISTENTE_SIN_BORRAR"
 FORBIDDEN_OPTIONS = {"--delete", "--uninstall", "--force", "--default", "--lock", "--put-key", "--replace-key"}
 

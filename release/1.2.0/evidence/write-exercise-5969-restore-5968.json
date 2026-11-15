@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "timestamp": "2026-11-15T16:17:19.866490Z",
+  "mode": "PHYSICAL",
+  "exercise": "WRITE_5969_READBACK_RESTORE_5968_READBACK_VERIFY_PRESERVED",
+  "applet_aid": "D4534C504D4601",
+  "preserved_applet_aid": "D4534C504D4401",
+  "initial_payload_sha256": "4c49bbbfbf2bb56267eb170acac596d86e06b9eb2c0fe3bea02afbeb72421e51",
+  "exercise_payload_sha256": "e48e7a2d6a0b38a82dc6461f964d7fb316a86b78eae44719856bec1e6829c0ef",
+  "preflight": {
+    "reader_name": "Alcor Micro AU9540 00 00",
+    "atr": "3BF81300008131FE454A434F5076323431B7",
+    "preserved_aid": "D4534C504D4401",
+    "preserved_state_sha256": "4c49bbbfbf2bb56267eb170acac596d86e06b9eb2c0fe3bea02afbeb72421e51",
+    "selected_aid": "D4534C504D4601",
+    "select_sw": "9000",
+    "initial_read_sha256": "4c49bbbfbf2bb56267eb170acac596d86e06b9eb2c0fe3bea02afbeb72421e51",
+    "contract_probe_sw": "6B00",
+    "contract": "COEXISTENT_33_BYTE",
+    "result": "PASS"
+  },
+  "exercise_write": {
+    "schema_version": 1,
+    "timestamp": "2026-11-15T16:17:20.196614Z",
+    "mode": "PHYSICAL",
+    "reader_name": "Alcor Micro AU9540 00 00",
+    "atr": "3BF81300008131FE454A434F5076323431B7",
+    "selected_aid": "D4534C504D4601",
+    "write_apdu_sha256": "54f7140700eacf8b42603e2885fe3c38b8d5cc809d9727423a655773cebb2a69",
+    "read_apdu_sha256": "983e1069a247049467747ae80ae4ce2099ccf542b3f11831108fcc0f4afbc764",
+    "expected_readback_sha256": "e48e7a2d6a0b38a82dc6461f964d7fb316a86b78eae44719856bec1e6829c0ef",
+    "readback_sha256": "e48e7a2d6a0b38a82dc6461f964d7fb316a86b78eae44719856bec1e6829c0ef",
+    "readback_match": true,
+    "write_executed": true,
+    "physical_validation": "PASS",
+    "container_state": "PERSONALIZED",
+    "result": "PASS",
+    "status_words": {
+      "select": "9000",
+      "write": "9000",
+      "read": "9000"
+    },
+    "disconnect_clean": true,
+    "errors": []
+  },
+  "restore_write": {
+    "schema_version": 1,
+    "timestamp": "2026-11-15T16:17:20.504411Z",
+    "mode": "PHYSICAL",
+    "reader_name": "Alcor Micro AU9540 00 00",
+    "atr": "3BF81300008131FE454A434F5076323431B7",
+    "selected_aid": "D4534C504D4601",
+    "write_apdu_sha256": "5eed1efea180fd854a941e26a03ba4acf0ca659b1f25221095f64991116150c1",
+    "read_apdu_sha256": "983e1069a247049467747ae80ae4ce2099ccf542b3f11831108fcc0f4afbc764",
+    "expected_readback_sha256": "4c49bbbfbf2bb56267eb170acac596d86e06b9eb2c0fe3bea02afbeb72421e51",
+    "readback_sha256": "4c49bbbfbf2bb56267eb170acac596d86e06b9eb2c0fe3bea02afbeb72421e51",
+    "readback_match": true,
+    "write_executed": true,
+    "physical_validation": "PASS",
+    "container_state": "PERSONALIZED",
+    "result": "PASS",
+    "status_words": {
+      "select": "9000",
+      "write": "9000",
+      "read": "9000"
+    },
+    "disconnect_clean": true,
+    "errors": []
+  },
+  "postflight": {
+    "preserved_aid": "D4534C504D4401",
+    "preserved_state_sha256": "4c49bbbfbf2bb56267eb170acac596d86e06b9eb2c0fe3bea02afbeb72421e51",
+    "preserved_state_match": true,
+    "result": "PASS"
+  },
+  "physical_write_attempted": true,
+  "write_commands_accepted": 2,
+  "write_executed": true,
+  "container_state": "RESTORED_5968_PRESERVED_UNCHANGED",
+  "physical_validation": "PASS",
+  "result": "PASS",
+  "errors": []
+}
