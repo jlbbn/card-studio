@@ -10,6 +10,11 @@ from .application import CardStudioApplication as TransactionApplication
 from .backends import CardpeekBackend, SunmiBackend, VirtualCardBackend
 from .config import AppSettings, SettingsStore
 from .cardlab_adapter import DEFAULT_EVIDENCE, load_cardlab_status
+from .registry_capture import (
+    CONFIRMATION as REGISTRY_CONFIRMATION,
+    DEFAULT_EVIDENCE as DEFAULT_REGISTRY_EVIDENCE,
+    capture_registry,
+)
 from .host.base import HostError
 from .money import Money
 from .transactions.model import TransactionError, TransactionRequest
@@ -71,6 +76,15 @@ def parser() -> argparse.ArgumentParser:
     commands.add_parser("physical-prepare")
     cardlab = commands.add_parser("cardlab-status")
     cardlab.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
+
+    registry = commands.add_parser("registry-status")
+    registry.add_argument("--execute", action="store_true")
+    registry.add_argument("--confirm-registry", default="")
+    registry.add_argument(
+        "--evidence",
+        type=Path,
+        default=DEFAULT_REGISTRY_EVIDENCE,
+    )
 
     transaction = commands.add_parser("transaction")
     transaction_commands = transaction.add_subparsers(dest="transaction_command", required=True)
@@ -295,6 +309,29 @@ def main(argv: list[str]) -> int:
             report = load_cardlab_status(args.evidence)
             emit(report)
             return 0 if report["status"] == "PASS" else 2
+
+        if args.command == "registry-status":
+            if (
+                not args.execute
+                or args.confirm_registry != REGISTRY_CONFIRMATION
+            ):
+                emit({
+                    "error": "REGISTRY_CONFIRMATION_REQUIRED",
+                    "required_confirmation": REGISTRY_CONFIRMATION,
+                    "physical_modification": "NOT_EXECUTED",
+                })
+                return 2
+
+            report = capture_registry(
+                args.evidence,
+                reader=settings.reader,
+            )
+            emit(report)
+
+            return 0 if report["result"] in {
+                "CARDLAB_REGISTRY_CONFIRMED",
+                "REGISTRY_READ_PASS",
+            } else 2
 
         if args.command == "hardware-status":
             report = initialize_application(settings_store)

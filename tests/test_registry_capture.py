@@ -170,3 +170,16 @@ def test_timeout_does_not_retry(
     assert caught.value.code == "REGISTRY_TIMEOUT"
     assert len(calls) == 1
     assert evidence.exists() is False
+
+
+def test_card_studio_cli_exposes_registry_status():
+    from card_studio.cli import parser
+
+    args = parser().parse_args([
+        "registry-status",
+    ])
+
+    assert args.command == "registry-status"
+    assert args.execute is False
+    assert args.confirm_registry == ""
+    assert args.evidence is not None

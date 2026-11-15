@@ -20,6 +20,13 @@ CARDLAB_APPLET_AID = "D4534C504D4701"
 
 CONFIRMATION = "LEER_REGISTRO_SIN_MODIFICAR"
 
+DEFAULT_EVIDENCE = (
+    Path.home()
+    / ".card-studio"
+    / "evidence"
+    / "globalplatform-registry.json"
+)
+
 FORBIDDEN_OPTIONS = {
     "--install",
     "--delete",
@@ -239,6 +246,11 @@ def capture_registry(
             else "REGISTRY_READ_PASS"
         ),
     }
+
+    evidence_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     write_json_atomic(
         evidence_path,
