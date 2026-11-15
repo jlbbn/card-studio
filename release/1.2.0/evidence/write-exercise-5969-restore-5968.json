@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "timestamp": "2026-11-15T16:17:19.866490Z",
+  "timestamp": "2026-11-15T16:28:13.717595Z",
   "mode": "PHYSICAL",
   "exercise": "WRITE_5969_READBACK_RESTORE_5968_READBACK_VERIFY_PRESERVED",
   "applet_aid": "D4534C504D4601",
@@ -21,7 +21,7 @@
   },
   "exercise_write": {
     "schema_version": 1,
-    "timestamp": "2026-11-15T16:17:20.196614Z",
+    "timestamp": "2026-11-15T16:28:14.045249Z",
     "mode": "PHYSICAL",
     "reader_name": "Alcor Micro AU9540 00 00",
     "atr": "3BF81300008131FE454A434F5076323431B7",
@@ -45,7 +45,7 @@
   },
   "restore_write": {
     "schema_version": 1,
-    "timestamp": "2026-11-15T16:17:20.504411Z",
+    "timestamp": "2026-11-15T16:28:14.352851Z",
     "mode": "PHYSICAL",
     "reader_name": "Alcor Micro AU9540 00 00",
     "atr": "3BF81300008131FE454A434F5076323431B7",
