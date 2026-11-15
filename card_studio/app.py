@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from pathlib import Path
 from collections.abc import Callable
 from typing import Any
 
@@ -31,6 +32,7 @@ from .model import (
     validate_card_id,
 )
 from .pcsc import create_pcsc_backend
+from .write_exercise import run_exercise
 from .service import CardStudioService
 from .startup import initialize_application
 from .store import JsonStore
@@ -78,6 +80,13 @@ class CardStudioWindow(Adw.ApplicationWindow):
             lambda _button: self._show_cardlab(),
         )
         header.pack_end(self.cardlab_button)
+
+        self.write_validation_button = Gtk.Button.new_with_label("Write Validation")
+        self.write_validation_button.connect(
+            "clicked",
+            lambda _button: self._show_write_validation(),
+        )
+        header.pack_end(self.write_validation_button)
 
         self.registry_button = Gtk.Button.new_with_label("Registry")
         self.registry_button.connect(
@@ -359,7 +368,7 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self.reader_name, self.api_health_button, self.detect_button, self.read_button,
             self.sync_button, self.write_button, self.reload_button, self.charge_button,
             self.save_settings_button, self.diagnostics_button, self.hardware_validation_button,
-            self.cardlab_button, self.registry_button,
+            self.cardlab_button, self.write_validation_button, self.registry_button,
         ]:
             widget.set_sensitive(idle)
         self.transport_label.set_visible(physical)
@@ -570,6 +579,62 @@ class CardStudioWindow(Adw.ApplicationWindow):
             dialog.present()
 
         self._run_async(load_registry_status, success)
+
+
+    def _show_write_validation(self) -> None:
+        reader = self.reader_name.get_text().strip()
+
+        if not reader:
+            reader = "Alcor Micro AU9540 00 00"
+
+        evidence_path = Path(
+            "release/1.2.0/evidence/write-exercise-5969-restore-5968.json"
+        )
+
+        def work() -> dict[str, Any]:
+            backend = create_pcsc_backend(
+                platform="linux",
+                reader_name=reader,
+            )
+
+            return run_exercise(
+                backend,
+                confirm_write=True,
+                evidence_path=evidence_path,
+            )
+
+        def success(report: dict[str, Any]) -> None:
+            postflight = report.get("postflight") or {}
+
+            body = (
+                f"Result:                  {report['result']}\n"
+                f"Physical validation:     {report['physical_validation']}\n\n"
+                f"Applet AID:              {report['applet_aid']}\n"
+                f"Preserved AID:           {report['preserved_applet_aid']}\n\n"
+                f"Write commands accepted: {report['write_commands_accepted']}\n"
+                f"Write executed:          {report['write_executed']}\n"
+                f"Container state:         {report['container_state']}\n\n"
+                f"Preserved state match:   {postflight.get('preserved_state_match', False)}\n"
+                f"Postflight:              {postflight.get('result', 'N/A')}\n\n"
+                f"Evidence:\n{report['evidence_path']}"
+            )
+
+            dialog = Adw.MessageDialog(
+                transient_for=self,
+                heading="JavaCard Write Validation · 4601",
+                body=body,
+            )
+            dialog.add_response("ok", "Aceptar")
+
+            if report["result"] == "PASS":
+                dialog.set_response_appearance(
+                    "ok",
+                    Adw.ResponseAppearance.SUGGESTED,
+                )
+
+            dialog.present()
+
+        self._run_async(work, success)
 
     def _show_cardlab(self) -> None:
         def success(report: dict[str, Any]) -> None:
