@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Swift Ledger Card Studio
+Comment=Tarjetas virtuales y físicas Swift Ledger
+Exec=swift-ledger-card-studio
+Icon=us.swiftledger.CardStudio
+Terminal=false
+Categories=Office;Finance;
+Keywords=Swift;Ledger;Card;NFC;SUNMI;
+StartupNotify=true
+StartupWMClass=us.swiftledger.CardStudio
