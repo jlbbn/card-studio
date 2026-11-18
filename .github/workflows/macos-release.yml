@@ -32,11 +32,18 @@ jobs:
           "$BREW_PYTHON" -m venv --system-site-packages "$VENV"
           "$VENV/bin/pip" install pytest jpype1
 
-      - name: Run regression and build signed app
-        run: ./packaging/macos/build.sh
+      - name: Place Java test fixture at the inherited path
+        run: |
+          TARGET="$GITHUB_WORKSPACE/../vendor/GlobalPlatformPro-next/tool/target/gp.jar"
+          mkdir -p "$(dirname "$TARGET")"
+          cp vendor/GlobalPlatformPro-next/tool/target/gp.jar "$TARGET"
+          printf '%s  %s\n' '49bc6c6c009420a0ba70c2305cdd5e80c7ad89152f35a333f6d25d57cfcc8e1c' "$TARGET" | shasum -a 256 -c -
 
       - name: Run complete pytest regression
         run: .venv-macos-$(uname -m)/bin/python -m pytest -q tests
+
+      - name: Run regression and build signed app
+        run: ./packaging/macos/build.sh
 
       - name: Verify app and create PACO artifacts
         run: |
