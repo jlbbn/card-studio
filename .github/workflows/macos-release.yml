@@ -30,6 +30,9 @@ jobs:
       - name: Run regression and build signed app
         run: ./packaging/macos/build.sh
 
+      - name: Run complete pytest regression
+        run: .venv-macos-$(uname -m)/bin/python -m pytest -q tests
+
       - name: Verify app and create PACO artifacts
         run: |
           set -euo pipefail
