@@ -15,6 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Install macOS build dependencies
         run: |
           export HOMEBREW_NO_AUTO_UPDATE=1
@@ -25,7 +30,7 @@ jobs:
           BREW_PYTHON="$(brew --prefix python)/bin/python3"
           VENV=".venv-macos-$(uname -m)"
           "$BREW_PYTHON" -m venv --system-site-packages "$VENV"
-          "$VENV/bin/pip" install pytest
+          "$VENV/bin/pip" install pytest jpype1
 
       - name: Run regression and build signed app
         run: ./packaging/macos/build.sh
