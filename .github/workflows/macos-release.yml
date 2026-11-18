@@ -20,6 +20,13 @@ jobs:
           export HOMEBREW_NO_AUTO_UPDATE=1
           brew install python pkg-config gobject-introspection pygobject3 gtk4 libadwaita swig
 
+      - name: Install runner-only test dependency
+        run: |
+          BREW_PYTHON="$(brew --prefix python)/bin/python3"
+          VENV=".venv-macos-$(uname -m)"
+          "$BREW_PYTHON" -m venv --system-site-packages "$VENV"
+          "$VENV/bin/pip" install pytest
+
       - name: Run regression and build signed app
         run: ./packaging/macos/build.sh
 

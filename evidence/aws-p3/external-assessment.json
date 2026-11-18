@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "phase": "P3.11",
+  "assessment_status": "PASS",
+  "gate_scope": "AUDIT_AND_CLASSIFY",
+  "infrastructure_compliance_certified": false,
+  "evidence_provenance": {
+    "authority": "EXTERNAL_AUTHORIZED_BY_OPERATOR",
+    "handling": "SANITIZED",
+    "agent_independent_aws_verification": "NOT_EXECUTED",
+    "physical_validation": "NOT_EXECUTED"
+  },
+  "region": "us-east-2",
+  "domains": [
+    {
+      "domain_id": "AWS-REGION",
+      "status": "PASS",
+      "facts": ["Infraestructura principal verificada en us-east-2"]
+    },
+    {
+      "domain_id": "ECS-SUNMI",
+      "status": "PASS",
+      "facts": [
+        "Cluster sunmi-v3",
+        "Servicios sunmi-pos y sunmi-tesoreria ACTIVE",
+        "Fargate",
+        "Task definition sunmi-v3-cobros:7",
+        "Puertos de contenedor 5300 y 5301"
+      ]
+    },
+    {
+      "domain_id": "ECS-SWIFT-LEDGER",
+      "status": "PASS",
+      "facts": [
+        "Cluster swiftledger y servicio swiftledger-app ACTIVE",
+        "ECS Express Gateway con task RUNNING",
+        "Puerto de aplicación 5000",
+        "/api/readyz HTTP 200 y target healthy"
+      ]
+    },
+    {
+      "domain_id": "ALB-ROUTING",
+      "status": "PASS",
+      "facts": [
+        "HTTPS 443 y default 404",
+        "Host-header routing para pos.swiftledger.us, tesoreria.swiftledger.us, swiftledger.us y www.swiftledger.us"
+      ]
+    },
+    {
+      "domain_id": "RDS-SECURITY",
+      "status": "PASS",
+      "facts": [
+        "swiftledger-db PostgreSQL 16.15 en puerto 5432",
+        "PubliclyAccessible=false",
+        "StorageEncrypted=true",
+        "Performance Insights habilitado",
+        "BackupRetentionPeriod=7 días",
+        "Enhanced Monitoring=60s"
+      ]
+    },
+    {
+      "domain_id": "RDS-LEAST-PRIVILEGE-INGRESS",
+      "status": "PASS",
+      "change_control": "AUTHORIZED_CHANGE_ALREADY_EXECUTED_BY_OPERATOR_NOT_REPEATED",
+      "facts": [
+        "App SG egress TCP/5432 hacia DB SG",
+        "DB SG ingress TCP/5432 desde app SG",
+        "Ingress amplio 10.20.0.0/16 retirado",
+        "Swift Ledger permaneció HTTP 200"
+      ]
+    },
+    {
+      "domain_id": "AWS-CONFIG-RECORDER",
+      "status": "PASS",
+      "facts": [
+        "Configuration recorder activo y frecuencia CONTINUOUS",
+        "Todos los tipos de recurso soportados, incluidos recursos globales"
+      ],
+      "deferred": ["Inventario de reglas, delivery channel y conteo de recursos noncompliant"]
+    },
+    {
+      "domain_id": "CLOUDTRAIL-OPERATIONS",
+      "status": "PASS",
+      "facts": [
+        "Bucket de auditoría S3 y buckets security/config verificados",
+        "CloudTrail event lookup operacional",
+        "Sin eventos SG authorize/revoke en la ventana histórica investigada"
+      ],
+      "deferred": ["Inventario de trails, multi-region, logging, validación y última entrega/error"]
+    },
+    {
+      "domain_id": "VPC-FLOW-LOGS",
+      "status": "IMPROVEMENT",
+      "finding_id": "AWS-P3-IMP-001",
+      "facts": ["No se encontraron VPC/subnet/ENI Flow Logs"],
+      "required_action": "Evaluar y habilitar Flow Logs con retención y destino controlados"
+    },
+    {
+      "domain_id": "SWIFTLEDGER-PUBLIC-IP",
+      "status": "IMPROVEMENT",
+      "finding_id": "AWS-P3-IMP-002",
+      "classification": "REVIEW_REQUIRED",
+      "facts": ["Task con IP privada y IPv4 pública observada"],
+      "required_action": "Revisar necesidad de IP pública y deshabilitarla si no es imprescindible"
+    },
+    {
+      "domain_id": "APP-EGRESS",
+      "status": "IMPROVEMENT",
+      "finding_id": "AWS-P3-IMP-003",
+      "facts": ["Application SG conserva outbound amplio"],
+      "required_action": "Definir destinos necesarios y restringir egress mediante cambio humano autorizado"
+    },
+    {
+      "domain_id": "RDS-MULTI-AZ",
+      "status": "IMPROVEMENT",
+      "finding_id": "AWS-P3-IMP-004",
+      "classification": "AVAILABILITY_GAP",
+      "facts": ["MultiAZ=false"],
+      "required_action": "Evaluar Multi-AZ según RTO/RPO y ventana de cambio autorizada"
+    },
+    {
+      "domain_id": "IAM-AND-ROOT",
+      "status": "DEFERRED",
+      "classification": "READ_ONLY_EVIDENCE_REQUIRED",
+      "facts": ["Servicios y task definition identificados; políticas y uso root no aportados"],
+      "deferred": [
+        "Root MFA y access keys de root",
+        "Usuarios, roles, Identity Center y políticas ECS/RDS",
+        "Evaluación least privilege y uso rutinario de root"
+      ],
+      "reopen_policy": [
+        "Uso rutinario de root: BLOCKER o HIGH-PRIORITY IMPROVEMENT según evidencia",
+        "Root sin MFA o con access keys activas: BLOCKER hasta mitigación/documentación",
+        "Políticas administrativas sin justificación least-privilege: HIGH-PRIORITY IMPROVEMENT"
+      ]
+    },
+    {
+      "domain_id": "BACKUP-INVENTORY",
+      "status": "DEFERRED",
+      "classification": "READ_ONLY_EVIDENCE_REQUIRED",
+      "facts": ["Retención RDS de 7 días registrada en RDS-SECURITY"],
+      "deferred": [
+        "PreferredBackupWindow, automated backups y snapshots recientes",
+        "DeletionProtection y CopyTagsToSnapshot"
+      ]
+    },
+    {
+      "domain_id": "CLOUDWATCH-ALARMS",
+      "status": "DEFERRED",
+      "classification": "READ_ONLY_EVIDENCE_REQUIRED",
+      "facts": ["Performance Insights y Enhanced Monitoring=60s registrados en RDS-SECURITY"],
+      "deferred": ["Inventario ECS/ALB/RDS de CPU, memoria, target health, conexiones, storage, errores y 5xx"],
+      "missing_alarm_policy": "Alarma crítica confirmada ausente: HIGH-PRIORITY IMPROVEMENT; ausencia de evidencia no se presenta como alarma faltante confirmada"
+    },
+    {
+      "domain_id": "SECRETS-METADATA",
+      "status": "DEFERRED",
+      "classification": "READ_ONLY_METADATA_REQUIRED",
+      "deferred": ["Nombres, rotation enabled/disabled, last changed y metadata KMS segura"],
+      "excluded": ["SecretString", "passwords", "tokens", "key material", "credential values"]
+    },
+    {
+      "domain_id": "RDS-RESTORE-READINESS",
+      "status": "DEFERRED",
+      "classification": "CONFIG_AND_DOCUMENTATION_REVIEW_REQUIRED",
+      "facts": ["Runbook local y restore aislado de laboratorio PASS; no sustituyen evidencia AWS"],
+      "deferred": ["Verificación documental de procedimiento y configuración AWS; restore AWS no ejecutado"]
+    }
+  ],
+  "blockers": [],
+  "pending_improvements": [
+    "AWS-P3-IMP-001",
+    "AWS-P3-IMP-002",
+    "AWS-P3-IMP-003",
+    "AWS-P3-IMP-004"
+  ],
+  "read_only_checklist": "scripts/aws_p3_readonly_evidence.sh",
+  "release_deployed": false,
+  "physical_validation": "DEFERRED / NOT EXECUTED",
+  "formal_certification": "NOT COMPLETED"
+}
