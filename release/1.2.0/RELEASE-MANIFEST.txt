@@ -1,0 +1,43 @@
+Card Studio Release 1.2.0
+
+Physical reader:
+Alcor Micro AU9540 00 00
+
+ATR:
+3BF81300008131FE454A434F5076323431B7
+
+CardLab validation applet:
+D4534C504D4701
+State: PHYSICALLY_CONFIRMED
+
+Physical write applet:
+D4534C504D4601
+
+Preserved applet:
+D4534C504D4401
+
+Physical write flow:
+5968 -> 5969 -> READBACK -> 5968 RESTORE -> PRESERVED CHECK
+
+Physical validation:
+PASS
+
+GUI write validation:
+PASS
+
+Write commands accepted:
+2
+
+Container state:
+RESTORED_5968_PRESERVED_UNCHANGED
+
+CAP 4601 SHA256:
+2ac47a346242e2371974c3177a2ab114d837222ff92141103301c13fa5ddde30
+
+LFDB 4601 SHA256:
+0b40186839c28b31e9b21b06486c6d18a9a451d83f1db8b1dafcee0e385bbe98
+
+Evidence:
+release/1.2.0/evidence/write-exercise-5969-restore-5968.json
+release/1.2.0/evidence/physical-validation-linux.json
+release/1.2.0/evidence/cap-4601-build.txt

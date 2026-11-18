@@ -1,0 +1,2 @@
+class SimulatedCrash(RuntimeError):
+    pass

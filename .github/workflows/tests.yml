@@ -1,0 +1,30 @@
+name: Card Studio tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar GTK en Ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libpcsclite-dev
+      - name: Instalar GTK en macOS
+        if: runner.os == 'macOS'
+        run: brew install python pkg-config gobject-introspection pygobject3 gtk4 libadwaita swig
+      - name: Crear entorno
+        run: python3 -m venv --system-site-packages .venv
+      - name: Instalar dependencias
+        run: .venv/bin/pip install -r requirements.txt
+      - name: Ejecutar pruebas
+        run: .venv/bin/python -m unittest discover -s tests -v

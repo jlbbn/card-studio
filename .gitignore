@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+.venv*/
+venv/
+
+# Build artifacts
+build/
+dist/
+.smoke-*/
+*.dmg
+*.app
+
+# Old PACO packages — reference only, not source
+Card-Studio-1.2.0-PACO-macOS/
+Card-Studio-1.2.0-PACO-macOS (2)/
+Card-Studio-1.2.0-PACO-macOS.zip
+
+# Local configuration / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+secrets*
+
+# OS / editor
+.DS_Store
+*.swp
+*~
+
+# PACO generated release artifacts
+release/paco/**/evidence/*.log
+release/paco/**/*.bundle
+release/paco/**/*.bundle.sha256
+release/paco/**/source/*.sha256
+release/paco/**/SHA256SUMS

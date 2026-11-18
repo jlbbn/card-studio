@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "phase": "P4_BASELINE",
+  "frozen_at": "2026-11-08",
+  "vcs_repository": false,
+  "commit_provenance": "tree-sha256:5eab502d67964bc5686759a35b60c918f1d85dd6113923cda65919185c112858",
+  "p0": "35/35 PASS",
+  "p1": "29/29 PASS",
+  "p2": "7/7 PASS",
+  "p3": "15/15 PASS",
+  "l3_hardened": "20/20 PASS",
+  "full_regression": "429/429 PASS",
+  "image_digest": "sha256:a08947ffd2e341e3740995234cc072d211456a40f96a124de9fa4dc23f574c47",
+  "schema_version_db": 1,
+  "migration_state": "001_p3_postgresql PASS",
+  "hashes": {
+    "release/p3/deployment-manifest.json": "67c853d6f4a9c64e47c9446b782269f636d5ead8ce60651c62d1ec21778c74cc",
+    "migrations/001_p3_postgresql.sql": "6a5c482514c13cbdbbe86470e9091d5fbccf68d4dfb119f11480c813467ab8c8",
+    "docs/EMV_P3_EXECUTION_EVIDENCE.md": "aa5b74fc00685f379098c49949b6af5dc2fb3eb3b13eeb48b7a76502401aba59",
+    "docs/AWS_HARDENING_P3.md": "ed61e88b32b69ebe4d1acf1d98f69326dc707b021e2ef1e96a17f156c907ae38",
+    "PUNTO_DE_CONTROL_EMV_P3.md": "ac1c29510f1dffd0070d99c1b1d936bc015c2c409c54087de7d2798ad70ea6ed",
+    "evidence/aws-p3/external-assessment.json": "193445fbad4de1839fd59eacca58475bc25040ace69fc4ad6fc0dc720b69f129"
+  },
+  "physical_validation": "DEFERRED / NOT EXECUTED",
+  "formal_certification": "NOT COMPLETED"
+}

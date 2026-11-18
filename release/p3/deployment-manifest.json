@@ -1,0 +1,46 @@
+{
+  "build": "1",
+  "certification": "NOT COMPLETED",
+  "commit_provenance": "tree-sha256:5eab502d67964bc5686759a35b60c918f1d85dd6113923cda65919185c112858",
+  "deployment": {
+    "deployed": false,
+    "environment": "SIMULATED",
+    "manifest_required": true
+  },
+  "dockerfile_sha256": "749177c4521c1048410e171cfd68341ab5746865b2aef92b3ddbd64e82ba55df",
+  "image_digest": "sha256:a08947ffd2e341e3740995234cc072d211456a40f96a124de9fa4dc23f574c47",
+  "evidence": {
+    "p3_status": "15/15 PASS",
+    "aws_assessment": "PASS",
+    "aws_gate_scope": "AUDIT_AND_CLASSIFY",
+    "aws_evidence_path": "evidence/aws-p3/external-assessment.json",
+    "aws_evidence_sha256": "193445fbad4de1839fd59eacca58475bc25040ace69fc4ad6fc0dc720b69f129",
+    "aws_blockers": [],
+    "aws_pending_improvements": [
+      "AWS-P3-IMP-001",
+      "AWS-P3-IMP-002",
+      "AWS-P3-IMP-003",
+      "AWS-P3-IMP-004"
+    ]
+  },
+  "migration": {
+    "gate": "PASS",
+    "sha256": "6a5c482514c13cbdbbe86470e9091d5fbccf68d4dfb119f11480c813467ab8c8",
+    "version": "001_p3_postgresql"
+  },
+  "physical_validation": "NOT_EXECUTED",
+  "regression_gate": {
+    "passed": 429,
+    "status": "PASS",
+    "total": 429
+  },
+  "requirements_lock_sha256": "9171e96b92ddec64cd54aaa17c1249b6b59d03dc95763b3c78c0e13e852552b1",
+  "rollback": {
+    "image_digest": "sha256:a08947ffd2e341e3740995234cc072d211456a40f96a124de9fa4dc23f574c47",
+    "procedure": "docs/BACKUP_RECOVERY_P3.md#rollback"
+  },
+  "schema_version": 1,
+  "service": "card-studio-swift-ledger-p3",
+  "source_tree_sha256": "5eab502d67964bc5686759a35b60c918f1d85dd6113923cda65919185c112858",
+  "version": "1.2.0"
+}

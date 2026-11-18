@@ -1,0 +1,11 @@
+FROM python:3-alpine@sha256:d44b1254cb92329418d164b22b20d86bbd3869d48e80e09e476531a409a728bb
+
+WORKDIR /app
+COPY card_studio /app/card_studio
+COPY migrations /app/migrations
+COPY requirements-p3-lock.txt /app/requirements-p3-lock.txt
+RUN addgroup -S card && adduser -S -G card card && mkdir -p /data && chown card:card /data
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+USER card
+EXPOSE 8080
+CMD ["python", "-m", "card_studio.production.server"]

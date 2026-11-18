@@ -1,0 +1,53 @@
+{
+  "build_hash": "e58715b17de2f43cc2ccf136b7590329677e40d373d4bd95f333a9759bf09131",
+  "certification": "NOT COMPLETED",
+  "commit_sha": "6ff7100fdc86d9c1d55b6a113d0a495082fcc9342d7df1642b7f1aac5f9b140f",
+  "commit_type": "CONTENT_SHA256_NOT_VCS",
+  "configuration_manifest": {
+    "contains_secrets": false,
+    "environment": "STAGING_ISOLATED",
+    "path": "staging/config.json",
+    "sha256": "6625a5ced15c366f7a96af58e4a409c2e3229a3abdf6d1c9b66aa61d5737a2ef"
+  },
+  "dependency_lock": {
+    "path": "requirements-p4-lock.txt",
+    "pinned": true,
+    "sha256": "cf66e7c1a2f036e5603e28a2decdd933096864f50551e14fd3f28964a74bf8d0"
+  },
+  "deployment": {
+    "deployed": true,
+    "deployed_at": "2026-11-08T20:19:33.169537Z",
+    "environment": "STAGING_ISOLATED",
+    "production": false,
+    "staging_only": true
+  },
+  "evidence_manifest": "release/p4/rc1/evidence-manifest.json",
+  "image": "card-studio-p4@sha256:06ee83091d664449271052c788f72e220fb18fe73af604cf6e9f6ded271bbbd8",
+  "image_digest": "sha256:06ee83091d664449271052c788f72e220fb18fe73af604cf6e9f6ded271bbbd8",
+  "migration_manifest": {
+    "schema_version": 1,
+    "sha256": "6a5c482514c13cbdbbe86470e9091d5fbccf68d4dfb119f11480c813467ab8c8",
+    "strategy": "ADDITIVE_BACKWARD_COMPATIBLE",
+    "version": "001_p3_postgresql"
+  },
+  "physical_validation": "DEFERRED / NOT EXECUTED",
+  "regression_gate": {
+    "passed": 441,
+    "status": "PASS",
+    "total": 441
+  },
+  "release_candidate": "RC1",
+  "rollback_target": {
+    "image": "card-studio-p4@sha256:53545abd91b278962abfb1ee138bc319f20851064851ddfd388e4fb562a0a309",
+    "image_digest": "sha256:53545abd91b278962abfb1ee138bc319f20851064851ddfd388e4fb562a0a309",
+    "schema_compatible": true
+  },
+  "schema_version": 1,
+  "source_hash": "6ff7100fdc86d9c1d55b6a113d0a495082fcc9342d7df1642b7f1aac5f9b140f",
+  "task_revisions": {
+    "sunmi-pos": "rc1-001",
+    "swiftledger": "rc1-001",
+    "tesoreria": "rc1-001"
+  },
+  "version": "1.2.0-p4-rc1"
+}

@@ -1,0 +1,85 @@
+name: Build Card Studio macOS 1.2.2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - macos-1.2.2-ci
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install macOS build dependencies
+        run: |
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew install python pkg-config gobject-introspection pygobject3 gtk4 libadwaita swig
+
+      - name: Run regression and build signed app
+        run: ./packaging/macos/build.sh
+
+      - name: Verify app and create PACO artifacts
+        run: |
+          set -euo pipefail
+          ARCH="$(uname -m)"
+          DIST="$PWD/dist/macos-$ARCH"
+          APP="$DIST/Swift Ledger Card Studio.app"
+          EXECUTABLE="$APP/Contents/MacOS/Swift Ledger Card Studio"
+          OUT="$PWD/artifacts"
+          DMG="Card-Studio-1.2.2-PACO-macOS.dmg"
+          ZIP="Card-Studio-1.2.2-PACO-macOS.zip"
+          mkdir -p "$OUT" "$PWD/runner-home"
+
+          VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+          test "$VERSION" = "1.2.2"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv --verbose=4 "$APP" 2> "$OUT/codesign.txt"
+
+          HOME="$PWD/runner-home" "$EXECUTABLE" --cli diagnose > "$OUT/diagnose.txt"
+          HOME="$PWD/runner-home" "$EXECUTABLE" --cli hardware-validation --dry-run --evidence "$OUT/dry-run-evidence.json" > "$OUT/dry-run.json"
+
+          open -n "$APP"
+          sleep 10
+          pgrep -f "$EXECUTABLE" >/dev/null
+          pkill -f "$EXECUTABLE" || true
+          printf 'GUI_LAUNCH=PASS\n' > "$OUT/launch.txt"
+
+          cp "$DIST/Card-Studio-$VERSION-macOS-$ARCH.dmg" "$OUT/$DMG"
+          hdiutil verify "$OUT/$DMG"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUT/$ZIP"
+          unzip -t "$OUT/$ZIP"
+
+          python3 - "$OUT/build-info.json" "$VERSION" "$ARCH" <<'PY'
+          import json
+          import os
+          import sys
+
+          path, version, arch = sys.argv[1:]
+          with open(path, "w") as handle:
+              json.dump({
+                  "version": version,
+                  "architecture": arch,
+                  "source_commit": os.environ["GITHUB_SHA"],
+                  "github_run_id": os.environ["GITHUB_RUN_ID"],
+                  "signature": "ad hoc",
+                  "notarization": "NOT_EXECUTED",
+                  "physical_card_validation": "NOT_EXECUTED",
+              }, handle, indent=2)
+              handle.write("\n")
+          PY
+
+          (cd "$OUT" && shasum -a 256 "$DMG" "$ZIP" > SHA256SUMS)
+          cat "$OUT/SHA256SUMS"
+
+      - name: Upload macOS installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-studio-1.2.2-macos
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,154 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/pyscard@2.3.2",
+      "name": "pyscard",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "runtime"
+        }
+      ],
+      "purl": "pkg:pypi/pyscard@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/psycopg@3.2.12",
+      "name": "psycopg",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "runtime"
+        }
+      ],
+      "purl": "pkg:pypi/psycopg@3.2.12",
+      "type": "library",
+      "version": "3.2.12"
+    },
+    {
+      "bom-ref": "pkg:pypi/psycopg-binary@3.2.12",
+      "name": "psycopg-binary",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "runtime"
+        }
+      ],
+      "purl": "pkg:pypi/psycopg-binary@3.2.12",
+      "type": "library",
+      "version": "3.2.12"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyinstaller@6.22.3",
+      "name": "pyinstaller",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "build"
+        }
+      ],
+      "purl": "pkg:pypi/pyinstaller@6.22.3",
+      "type": "library",
+      "version": "6.22.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyinstaller-hooks-contrib@2026.9",
+      "name": "pyinstaller-hooks-contrib",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "build"
+        }
+      ],
+      "purl": "pkg:pypi/pyinstaller-hooks-contrib@2026.9",
+      "type": "library",
+      "version": "2026.9"
+    },
+    {
+      "bom-ref": "pkg:pypi/altgraph@0.17.5",
+      "name": "altgraph",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "build"
+        }
+      ],
+      "purl": "pkg:pypi/altgraph@0.17.5",
+      "type": "library",
+      "version": "0.17.5"
+    },
+    {
+      "bom-ref": "pkg:pypi/packaging@26.0",
+      "name": "packaging",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "runtime"
+        }
+      ],
+      "purl": "pkg:pypi/packaging@26.0",
+      "type": "library",
+      "version": "26.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/setuptools@78.1.1",
+      "name": "setuptools",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "build"
+        }
+      ],
+      "purl": "pkg:pypi/setuptools@78.1.1",
+      "type": "library",
+      "version": "78.1.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/pygobject@3.56.2",
+      "name": "PyGObject",
+      "properties": [
+        {
+          "name": "scope",
+          "value": "runtime"
+        }
+      ],
+      "purl": "pkg:pypi/pygobject@3.56.2",
+      "type": "library",
+      "version": "3.56.2"
+    },
+    {
+      "name": "Python",
+      "properties": [
+        {
+          "name": "packaging",
+          "value": "PyInstaller embedded runtime"
+        }
+      ],
+      "type": "platform",
+      "version": "3.14.4"
+    },
+    {
+      "name": "GTK",
+      "type": "framework",
+      "version": "4.22.4"
+    },
+    {
+      "name": "libadwaita",
+      "type": "framework",
+      "version": "1.9.1"
+    }
+  ],
+  "metadata": {
+    "git_commit": "296fa89457590903488e0055953cbd1d171f52f0",
+    "inventory_provenance": "Linux",
+    "native_build_status": "NOT EXECUTED",
+    "product": "Card Studio",
+    "target_platform": "macOS 12+; native build x86_64",
+    "timestamp": "2026-11-08T22:30:58.656413+00:00",
+    "version": "1.2.0-p4-rc1"
+  },
+  "specVersion": "1.5",
+  "version": 1
+}

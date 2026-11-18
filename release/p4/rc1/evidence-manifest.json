@@ -1,0 +1,151 @@
+{
+  "artifacts": [
+    {
+      "bytes": 646,
+      "path": "Dockerfile.p4",
+      "sha256": "64b276c1b435b99364d9fdd377d823e021de9e68d281992c46fbcd51dc869e82"
+    },
+    {
+      "bytes": 2974,
+      "path": "PUNTO_DE_CONTROL_EMV_P4.md",
+      "sha256": "3065fca51f6da23e30111eaf918914259b6ae298076a5b3f228cfb6e40e69145"
+    },
+    {
+      "bytes": 1818,
+      "path": "PUNTO_DE_CONTROL_EMV_P4_BASELINE.md",
+      "sha256": "24c7a1ca35a8ca522b53abc92e3a14c051df97ae47a038bd084639cda12f34d7"
+    },
+    {
+      "bytes": 6317,
+      "path": "docs/EMV_P4_EXECUTION_EVIDENCE.md",
+      "sha256": "668ec81486b419a19adda6136e2dd3d66d9928b01c871b8a9c37ee1204ed898f"
+    },
+    {
+      "bytes": 2230,
+      "path": "docs/P4_DISASTER_RECOVERY.md",
+      "sha256": "91468c260b3a377bfbab6dcff7e19582a7a80e87426f8f42bea67d96a3f969fd"
+    },
+    {
+      "bytes": 4875,
+      "path": "docs/P4_IAM_OPERATIONAL_MODEL.md",
+      "sha256": "1e49bc2c4a50e64a55cf453f2d295bf3193e52166568ad8452823b92b73db6ef"
+    },
+    {
+      "bytes": 3328,
+      "path": "docs/P4_OBSERVABILITY.md",
+      "sha256": "e33a382c1bb2577cdea4782308cb4dd3ad7088f8909b855125527a397e3585d3"
+    },
+    {
+      "bytes": 3753,
+      "path": "docs/P4_RELEASE_READINESS.md",
+      "sha256": "db752d6783228e683a607251a6a717fb3deb78e31a9092227813e790977d9969"
+    },
+    {
+      "bytes": 2983,
+      "path": "evidence/p4/rc1/alerting.json",
+      "sha256": "80586fb6267c2ebfc50faec39d491ed3b977251eef954c1f327f1d3d7d413cb3"
+    },
+    {
+      "bytes": 188,
+      "path": "evidence/p4/rc1/chaos.json",
+      "sha256": "e4735551393ecba2493f14d31cd414808517812b92d7c6491e70c95b5b4d60d7"
+    },
+    {
+      "bytes": 3047,
+      "path": "evidence/p4/rc1/deployment.json",
+      "sha256": "2d286b00af4114f21079848fc9788ba85c1e88029be6a590201d11ebeb890cb3"
+    },
+    {
+      "bytes": 1066,
+      "path": "evidence/p4/rc1/disaster-recovery.json",
+      "sha256": "bc3201cac72548e0b21981f06dca0c773e611432ee831bca61f2cc696403653d"
+    },
+    {
+      "bytes": 3622,
+      "path": "evidence/p4/rc1/failure-injection.json",
+      "sha256": "94efb809d041e76c7608a44b021ddbb1a0b8806a463dfb5c3158d5dcf4d0930b"
+    },
+    {
+      "bytes": 5533,
+      "path": "evidence/p4/rc1/load.json",
+      "sha256": "68c09925943c0759baaf277b38c68c3f31129415ad1d0ef16101000291e41d87"
+    },
+    {
+      "bytes": 313,
+      "path": "evidence/p4/rc1/migration.json",
+      "sha256": "75cf23c398058303807a26c2d1f741c38f38d4a6589b39b6686c0e03eae0fc7d"
+    },
+    {
+      "bytes": 293,
+      "path": "evidence/p4/rc1/rollback.json",
+      "sha256": "0520c12b8876a94e19dde56a83cb0c250aa57c5305065cc4fea5cbcccb628d0a"
+    },
+    {
+      "bytes": 1253,
+      "path": "evidence/p4/rc1/secrets-config.json",
+      "sha256": "ea25b3226dab8dc0acb117491e27dc0a31bf29b1ad8a21a2defd23474fa9f462"
+    },
+    {
+      "bytes": 1920,
+      "path": "evidence/p4/rc1/security-regression.json",
+      "sha256": "10da7aef8f15e54ca45a91702e3be934a459161c5a2d8d16ff3a8cd1eaae63ea"
+    },
+    {
+      "bytes": 206,
+      "path": "evidence/p4/rc1/swiftledger-1794168333.log",
+      "sha256": "969519d3485d456263deb16bf72dbb53b3d4707943813f653950abcb72666004"
+    },
+    {
+      "bytes": 206,
+      "path": "evidence/p4/rc1/swiftledger-1794168382.log",
+      "sha256": "969519d3485d456263deb16bf72dbb53b3d4707943813f653950abcb72666004"
+    },
+    {
+      "bytes": 206,
+      "path": "evidence/p4/rc1/swiftledger-1794169216.log",
+      "sha256": "969519d3485d456263deb16bf72dbb53b3d4707943813f653950abcb72666004"
+    },
+    {
+      "bytes": 1290,
+      "path": "release/p4/p3-baseline-freeze.json",
+      "sha256": "6e99265f8aee5a930334ca30caf3f0042778915c23932a879d03797bc30750e6"
+    },
+    {
+      "bytes": 1976,
+      "path": "release/p4/rc1/deployment-manifest.json",
+      "sha256": "855267c4987cb228513f883ed9a17bc4849332254f09a5836650aacecdaa2583"
+    },
+    {
+      "bytes": 24,
+      "path": "requirements-p4-lock.txt",
+      "sha256": "cf66e7c1a2f036e5603e28a2decdd933096864f50551e14fd3f28964a74bf8d0"
+    },
+    {
+      "bytes": 988,
+      "path": "scripts/build_p4_rc1.py",
+      "sha256": "9d3d252c53049cf9871867ce0c67ff0b81e518fe3f083b7ce2a9398b03e64fc7"
+    },
+    {
+      "bytes": 31386,
+      "path": "scripts/run_p4_staging.py",
+      "sha256": "cfdbd385cf1044a9adf934294579873f7d66a703c6c8173ef0e3a98eb975f745"
+    },
+    {
+      "bytes": 638,
+      "path": "staging/config.json",
+      "sha256": "6625a5ced15c366f7a96af58e4a409c2e3229a3abdf6d1c9b66aa61d5737a2ef"
+    }
+  ],
+  "certification": "NOT COMPLETED",
+  "contains_secrets": false,
+  "created_at": "2026-11-08T20:32:34.273056Z",
+  "evidence_level": "SIMULATED / STAGING_ISOLATED",
+  "physical_validation": "DEFERRED / NOT EXECUTED",
+  "regression": {
+    "passed": 441,
+    "status": "PASS",
+    "total": 441
+  },
+  "release_candidate": "RC1",
+  "schema_version": 1
+}
