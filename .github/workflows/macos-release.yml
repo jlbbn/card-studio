@@ -88,7 +88,7 @@ jobs:
           assert report["pcsc"] == "NOT_OPENED", report
           assert report["apdus"] == "NOT_SENT", report
           gp_jar = Path(report["gp_jar"]["path"]).resolve()
-          assert "_MEI" in gp_jar.parts, gp_jar
+          assert any(part.startswith("_MEI") for part in gp_jar.parts), gp_jar
           assert gp_jar.is_file(), gp_jar
           assert hashlib.sha256(gp_jar.read_bytes()).hexdigest() == "49bc6c6c009420a0ba70c2305cdd5e80c7ad89152f35a333f6d25d57cfcc8e1c"
           print(f"GLOBALPLATFORM_APP=PASS GP_JAR={gp_jar}")

@@ -294,7 +294,7 @@ def test_macos_workflow_checks_globalplatform_inside_app():
     assert "globalplatform-status-app.json" in workflow
     assert "globalplatform-status-development.json" in workflow
     assert 'test "$(uname -m)" = "arm64"' in workflow
-    assert '"_MEI" in gp_jar.parts' in workflow
+    assert 'part.startswith("_MEI")' in workflow
     assert "hashlib.sha256(gp_jar.read_bytes()).hexdigest()" in workflow
     assert "Card-Studio-1.2.3-PACO-macOS.dmg" in workflow
     assert "Card-Studio-1.2.3-PACO-macOS.zip" in workflow
