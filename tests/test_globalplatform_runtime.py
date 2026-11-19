@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -85,7 +86,9 @@ def test_runtime_check_starts_jvm_and_loads_required_classes_without_pcsc(
     report = check_globalplatform_runtime(jar)
 
     assert report["status"] == "PASS"
-    assert report["gp_jar"] == {"path": str(jar), "exists": True}
+    assert report["gp_jar"]["path"] == str(jar)
+    assert report["gp_jar"]["exists"] is True
+    assert report["gp_jar"]["sha256"] == hashlib.sha256(jar.read_bytes()).hexdigest()
     assert report["jpype"] == {"imported": True, "version": "1.7.1-test"}
     assert report["jvm"] == {
         "started": True,
@@ -295,6 +298,7 @@ def test_macos_workflow_checks_globalplatform_inside_app():
     assert "globalplatform-status-development.json" in workflow
     assert 'test "$(uname -m)" = "arm64"' in workflow
     assert 'part.startswith("_MEI")' in workflow
-    assert "hashlib.sha256(gp_jar.read_bytes()).hexdigest()" in workflow
+    assert 'report["gp_jar"]["sha256"]' in workflow
+    assert "assert gp_jar.is_file()" not in workflow
     assert "Card-Studio-1.2.3-PACO-macOS.dmg" in workflow
     assert "Card-Studio-1.2.3-PACO-macOS.zip" in workflow

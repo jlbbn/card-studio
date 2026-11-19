@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 from typing import Any
@@ -40,6 +41,7 @@ def check_globalplatform_runtime(
         "gp_jar": {
             "path": str(jar),
             "exists": jar_exists,
+            "sha256": None,
         },
         "jpype": {
             "imported": False,
@@ -64,6 +66,15 @@ def check_globalplatform_runtime(
         report["errors"].append({
             "code": "GPPRO_JAR_NOT_FOUND",
             "message": f"No existe gp.jar: {jar}",
+        })
+        return report
+
+    try:
+        report["gp_jar"]["sha256"] = hashlib.sha256(jar.read_bytes()).hexdigest()
+    except OSError as error:
+        report["errors"].append({
+            "code": "GPPRO_JAR_READ_FAILED",
+            "message": str(error),
         })
         return report
 
