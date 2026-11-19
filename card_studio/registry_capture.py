@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -11,6 +12,7 @@ from typing import Any
 
 from .model import CardError
 from .store import write_json_atomic
+from .system import data_directory
 
 
 SCHEMA = "globalplatform-registry-evidence/v2"
@@ -20,12 +22,26 @@ CARDLAB_APPLET_AID = "D4534C504D4701"
 
 CONFIRMATION = "LEER_REGISTRO_SIN_MODIFICAR"
 
-DEFAULT_EVIDENCE = (
-    Path.home()
-    / ".card-studio"
-    / "evidence"
-    / "globalplatform-registry.json"
-)
+def default_registry_evidence() -> Path:
+    return data_directory() / "Evidence" / "globalplatform" / "globalplatform-registry.json"
+
+
+def legacy_registry_evidence() -> Path:
+    return Path.home() / ".card-studio" / "evidence" / "globalplatform-registry.json"
+
+
+def resolve_registry_evidence(evidence_path: Path | None = None) -> Path:
+    if evidence_path is not None:
+        return Path(evidence_path)
+    configured = os.environ.get("CARD_STUDIO_REGISTRY_EVIDENCE")
+    if configured:
+        return Path(configured).expanduser()
+    primary = default_registry_evidence()
+    legacy = legacy_registry_evidence()
+    return legacy if not primary.is_file() and legacy.is_file() else primary
+
+
+DEFAULT_EVIDENCE = default_registry_evidence()
 
 FORBIDDEN_OPTIONS = {
     "--install",
@@ -337,9 +353,9 @@ def capture_registry_in_process(
 
 
 def load_registry_status(
-    evidence_path: Path = DEFAULT_EVIDENCE,
+    evidence_path: Path | None = None,
 ) -> dict[str, Any]:
-    path = Path(evidence_path)
+    path = resolve_registry_evidence(evidence_path)
 
     try:
         document = json.loads(
@@ -348,7 +364,7 @@ def load_registry_status(
     except OSError as error:
         raise CardError(
             "REGISTRY_EVIDENCE_NOT_READABLE",
-            "No se pudo leer la evidencia GlobalPlatform.",
+            f"No se pudo leer la evidencia GlobalPlatform: {path}. No se ejecutó una lectura nueva.",
         ) from error
     except json.JSONDecodeError as error:
         raise CardError(
@@ -413,6 +429,7 @@ def load_registry_status(
             "physical_modification"
         ),
         "source_evidence": str(path),
+        "evidence_scope": "HISTORICAL_RECORD",
     }
 
 def parser() -> argparse.ArgumentParser:

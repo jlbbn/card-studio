@@ -55,18 +55,38 @@ La evidencia se guarda fuera del `.app` en:
 
 La validación solo realiza detección, ATR y SELECT. No instala/borra applets, no escribe, no cambia claves y no ejecuta provisioning.
 
+## Runtime GlobalPlatform
+
+El bundle incluye JPype, su extensión nativa, `org.jpype.jar` y `gp.jar`. La JVM no se empaqueta: se requiere un JDK 17 arm64 compatible y descubrible mediante `JAVA_HOME` o Java del sistema. La comprobación no abre PC/SC ni transmite APDUs:
+
+```bash
+'/Applications/Swift Ledger Card Studio.app/Contents/MacOS/Swift Ledger Card Studio' --cli globalplatform-status
+```
+
+Debe informar `status=PASS`, ambas clases Java cargadas y `gp.jar` dentro del `.app`. Si Java o una dependencia falta, el comando devuelve `FAIL` con la fase exacta del error.
+
+## Evidencias CardLab, GlobalPlatform y Write Validation
+
+Los botones **CardLab**, **Registry** y **Write Validation** leen evidencias existentes; no crean validaciones físicas ni convierten archivos en PASS. Sus ubicaciones portables son:
+
+- `~/Library/Application Support/Swift Ledger Card Studio/Evidence/cardlab/validate-all.json`.
+- `~/Library/Application Support/Swift Ledger Card Studio/Evidence/globalplatform/globalplatform-registry.json`.
+- `~/Library/Application Support/Swift Ledger Card Studio/Evidence/write-validation/write-exercise-5969-restore-5968.json`.
+
+Se conservan las rutas legacy de VENUS como fallback. `CARD_STUDIO_CARDLAB_EVIDENCE`, `CARD_STUDIO_REGISTRY_EVIDENCE` y `CARD_STUDIO_WRITE_EVIDENCE` permiten seleccionar otra fuente explícita. La interfaz muestra fecha, origen y alcance `HISTORICAL_RECORD`. Si la evidencia falta o es inválida, el error es obligatorio y no se ejecuta hardware como sustituto. **Write Validation es exclusivamente un visor de evidencia** desde esta revisión; el ejercicio de escritura permanece fuera de la interfaz.
+
 ## Modo virtual
 
 Selecciona **Virtual** para leer la tarjeta, escribir un identificador propio `SL-…`, simular recargas y cobros MXN y consultar historial. No es dinero real y no se inician cargos bancarios.
 
 ## Conexión con Swift Ledger
 
-1. Escribe la URL del POS sandbox.
-2. Escribe el código de terminal sandbox.
-3. Introduce la llave solo cuando vayas a sincronizar; no se guarda.
-4. Pulsa **Probar API** y después **Guardar configuración no secreta**.
+1. Conéctate a la tailnet autorizada. Selecciona **API real · VENUS privada** y conserva la URL Tailscale `http://admin1-venus-series.tail7dc5a9.ts.net:5200` y el Backend ID `venus-swift-ledger-real`. WireGuard cifra el canal; HTTP no se expone a Internet.
+2. Conserva el código de terminal `VENUS-MAC-001` e introduce su llave base64url; la llave no se guarda.
+3. Pulsa **Test API**. El resultado debe mostrar `API REAL`, `swift-ledger-payment-engine`, el Backend ID y `VENUS_PRIVATE`.
+4. Pulsa **Guardar configuración no secreta**. Para pruebas locales deliberadas, el modo **Sandbox POS · local** es independiente y se identifica como sandbox.
 
-No se incluyen llaves privadas, tokens, `.env` ni credenciales de producción en el APP o DMG. Las URL con usuario/contraseña, parámetros o fragmentos se rechazan.
+No se incluyen llaves privadas, tokens, `.env` ni credenciales de producción en el APP o DMG. Las URL con usuario/contraseña, parámetros o fragmentos se rechazan. El registro real no implica captura ni movimiento de fondos.
 
 ## Diagnóstico
 

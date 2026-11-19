@@ -14,16 +14,27 @@ from card_studio.system import evidence_directory
 class ReleaseTests(unittest.TestCase):
     def test_version_and_macos_packaging_are_updated(self):
         root = Path(__file__).resolve().parents[1]
-        self.assertEqual(__version__, "1.2.2")
-        self.assertEqual(__build__, "1")
+        self.assertEqual(__version__, "1.2.3")
+        self.assertEqual(__build__, "2")
         spec = (root / "packaging/macos/card-studio.spec").read_text()
         build = (root / "packaging/macos/build.sh").read_text()
-        self.assertIn('"CFBundleShortVersionString": "1.2.2"', spec)
+        self.assertIn('"CFBundleShortVersionString": "1.2.3"', spec)
         self.assertIn("smartcard.System", spec)
         self.assertIn("Card-Studio-$VERSION-macOS-$TARGET_ARCH.dmg", build)
         self.assertIn("release/$VERSION/macos-$TARGET_ARCH", build)
         self.assertIn("shasum -a 256", build)
         self.assertIn("--dry-run", build)
+
+    def test_globalplatform_jar_resolves_inside_project(self):
+        from card_studio.coexistent_install import DEFAULT_GP_JAR, ROOT
+
+        root = Path(__file__).resolve().parents[1]
+        self.assertEqual(ROOT, root)
+        self.assertEqual(
+            DEFAULT_GP_JAR,
+            root / "vendor/GlobalPlatformPro-next/tool/target/gp.jar",
+        )
+        self.assertTrue(DEFAULT_GP_JAR.is_file())
 
     def test_settings_v1_migrate_without_losing_compatible_values(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -81,6 +92,8 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("Run Validation", source)
         self.assertIn("Dry-run", source)
         self.assertIn("HardwareValidator", source)
+        self.assertIn("load_write_exercise_status", source)
+        self.assertNotIn("run_exercise", source)
 
 
 if __name__ == "__main__":

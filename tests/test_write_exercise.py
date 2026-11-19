@@ -13,6 +13,7 @@ from card_studio.write_exercise import (
     PRESERVED_STATE,
     SimulatedDemoAdapter,
     demo_write_apdu,
+    load_write_exercise_status,
     run_exercise,
 )
 
@@ -96,6 +97,27 @@ class WriteExerciseTests(unittest.TestCase):
             self.assertNotIn(EXERCISE_PAYLOAD.decode("ascii"), raw)
             self.assertNotIn(PRESERVED_STATE.decode("ascii"), raw)
             self.assertEqual(len(document["initial_payload_sha256"]), 64)
+
+    def test_load_write_evidence_never_executes_another_exercise(self):
+        adapter = SimulatedDemoAdapter()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "exercise.json"
+            run_exercise(adapter, confirm_write=True, evidence_path=path)
+            write_count = adapter.write_count
+            report = load_write_exercise_status(path)
+            self.assertEqual(report["result"], "PASS")
+            self.assertEqual(report["evidence_scope"], "HISTORICAL_RECORD")
+            self.assertEqual(report["evidence_path"], str(path))
+            self.assertEqual(adapter.write_count, write_count)
+
+    def test_missing_write_evidence_does_not_trigger_hardware(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "missing.json"
+            with self.assertRaises(CardError) as caught:
+                load_write_exercise_status(path)
+            self.assertEqual(caught.exception.code, "WRITE_EVIDENCE_NOT_FOUND")
+            self.assertIn(str(path), caught.exception.message)
+            self.assertIn("No se ejecutó escritura", caught.exception.message)
 
     def test_apdu_builder_enforces_the_33_byte_contract(self):
         command = demo_write_apdu(EXERCISE_PAYLOAD)

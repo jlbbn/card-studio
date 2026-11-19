@@ -1,7 +1,12 @@
+import contextlib
+import io
+import json
+import os
 import subprocess
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 
 from card_studio.model import CardError
@@ -183,8 +188,55 @@ def test_card_studio_cli_exposes_registry_status():
     assert args.command == "registry-status"
     assert args.execute is False
     assert args.confirm_registry == ""
-    assert args.evidence is not None
+    assert args.evidence is None
 
+
+def test_cli_registry_status_only_reads_evidence():
+    from card_studio.cli import main
+
+    with patch("card_studio.cli.load_registry_status", return_value={"status": "PASS"}) as load, \
+        patch("card_studio.cli.create_pcsc_backend") as pcsc:
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = main(["registry-status"])
+    assert result == 0
+    load.assert_called_once_with(None)
+    pcsc.assert_not_called()
+    assert json.loads(output.getvalue())["status"] == "PASS"
+
+
+
+def test_registry_uses_portable_evidence_directory(tmp_path: Path):
+    evidence = tmp_path / "Evidence" / "globalplatform" / "globalplatform-registry.json"
+    evidence.parent.mkdir(parents=True)
+    evidence.write_text(json.dumps({
+        "schema": "globalplatform-registry-evidence/v2",
+        "mode": "LIVE_READ_ONLY",
+        "captured_at": "2026-11-15T04:00:00Z",
+        "physical_modification": "NOT_EXECUTED",
+        "result": "CARDLAB_REGISTRY_CONFIRMED",
+        "cardlab": {
+            "package_aid": CARDLAB_PACKAGE_AID,
+            "applet_aid": CARDLAB_APPLET_AID,
+            "package_present": True,
+            "applet_present": True,
+            "cardlab_registry_confirmed": True,
+        },
+    }))
+    with patch.dict(os.environ, {"CARD_STUDIO_DATA_DIR": str(tmp_path)}):
+        report = load_registry_status()
+    assert report["source_evidence"] == str(evidence)
+    assert report["evidence_scope"] == "HISTORICAL_RECORD"
+
+
+def test_registry_missing_evidence_reports_path(tmp_path: Path):
+    evidence = tmp_path / "missing.json"
+    with patch.dict(os.environ, {"CARD_STUDIO_REGISTRY_EVIDENCE": str(evidence)}):
+        with unittest.TestCase().assertRaises(CardError) as caught:
+            load_registry_status()
+    assert caught.exception.code == "REGISTRY_EVIDENCE_NOT_READABLE"
+    assert str(evidence) in caught.exception.message
+    assert "No se ejecutó" in caught.exception.message
 
 
 def test_load_registry_status_from_physical_evidence(

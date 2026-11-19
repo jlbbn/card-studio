@@ -51,6 +51,20 @@ class SettingsTests(unittest.TestCase):
             self.assertEqual(settings.ledger_url, "https://api.invalid")
             self.assertEqual(settings.terminal_code, "TEST")
 
+    def test_real_backend_is_default_and_legacy_local_pos_is_migrated(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            path.write_text(json.dumps({
+                "version": 2,
+                "ledgerUrl": "http://127.0.0.1:5300",
+                "terminalCode": "",
+            }))
+            settings = SettingsStore(Path(directory)).load({})
+            self.assertEqual(settings.ledger_mode, "real")
+            self.assertEqual(settings.ledger_url, "http://admin1-venus-series.tail7dc5a9.ts.net:5200")
+            self.assertEqual(settings.ledger_backend_id, "venus-swift-ledger-real")
+            self.assertEqual(settings.terminal_code, "VENUS-MAC-001")
+
     def test_rejects_credentials_and_invalid_urls(self):
         for value in ["file://invalid", "https://user:password@example.com", "https://example.com?key=secret", "https://example.com:bad"]:
             with self.subTest(value=value), self.assertRaises(LedgerError):

@@ -12,7 +12,7 @@ from typing import Any
 
 from . import __version__
 from .config import AppSettings
-from .ledger import LedgerClient
+from .ledger import LedgerClient, RealLedgerClient
 from .model import CardError
 from .pcsc import create_pcsc_backend
 from .system import config_directory, data_directory, log_directory, platform_name
@@ -96,13 +96,23 @@ def collect_diagnostics(
         checks.append(_check("SUNMI por ADB", "AVISO", "adb no está instalado"))
 
     if check_api:
+        real = current.ledger_mode == "real"
         try:
-            health = LedgerClient(current.ledger_url).health()
+            client = (
+                RealLedgerClient(current.ledger_url, current.terminal_code,
+                                 expected_backend_id=current.ledger_backend_id)
+                if real else LedgerClient(current.ledger_url)
+            )
+            health = client.health()
         except Exception as exc:
             logger.warning("Diagnóstico de API fallido: %s", exc)
-            checks.append(_check("Swift Ledger sandbox", "ERROR", str(exc)))
+            checks.append(_check("Swift Ledger real" if real else "Swift Ledger sandbox", "ERROR", str(exc)))
         else:
-            checks.append(_check("Swift Ledger sandbox", "OK", str(health.get("serverTime", "Disponible"))))
+            detail = (
+                f"{health.get('service')} · {health.get('backendId')} · {health.get('environment')}"
+                if real else str(health.get("serverTime", "Disponible"))
+            )
+            checks.append(_check("Swift Ledger real" if real else "Swift Ledger sandbox", "OK", detail))
 
     return {
         "application": "Swift Ledger Card Studio",

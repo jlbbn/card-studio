@@ -14,6 +14,10 @@ from urllib.parse import urlsplit
 from .model import Operation
 
 OPERATION_PATH = "/api/pos/card-studio/operations"
+REAL_HEALTH_PATH = "/api/card-studio/v1/health"
+REAL_OPERATION_PATH = "/api/card-studio/v1/operations"
+REAL_SERVICE = "swift-ledger-payment-engine"
+REAL_CONTRACT = "card-studio/v1"
 
 
 class LedgerError(Exception):
@@ -40,10 +44,11 @@ def canonical_payment_request(
     timestamp: str,
     nonce: str,
     path: str,
-    body: dict[str, Any],
+    body: dict[str, Any] | None,
+    method: str = "POST",
 ) -> str:
-    body_hash = hashlib.sha256(canonical_json(body).encode("utf-8")).hexdigest()
-    return "\n".join(["v1", "PAYMENTS", terminal_code, timestamp, nonce, "POST", path, body_hash])
+    body_hash = hashlib.sha256(b"" if body is None else canonical_json(body).encode("utf-8")).hexdigest()
+    return "\n".join(["v1", "PAYMENTS", terminal_code, timestamp, nonce, method, path, body_hash])
 
 
 def normalize_base_url(base_url: str) -> str:
@@ -84,7 +89,8 @@ class LedgerClient:
                 value = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             try:
-                value = json.loads(exc.read().decode("utf-8"))
+                with exc:
+                    value = json.loads(exc.read().decode("utf-8"))
                 message = value.get("message") or value.get("error") or str(exc)
             except (ValueError, UnicodeDecodeError):
                 message = f"Swift Ledger respondió HTTP {exc.code}."
@@ -131,4 +137,81 @@ class LedgerClient:
         )
         if value.get("status") != "RECORDED" or value.get("simulation") is not True:
             raise LedgerError("Swift Ledger no confirmó el registro sandbox.")
+        return value
+
+
+class RealLedgerClient(LedgerClient):
+    def __init__(
+        self,
+        base_url: str,
+        terminal_code: str = "",
+        secret_key: str = "",
+        expected_backend_id: str = "",
+        timeout: float = 6.0,
+    ):
+        super().__init__(base_url, terminal_code, secret_key, timeout)
+        self.expected_backend_id = expected_backend_id.strip()
+
+    def _signed_request(
+        self,
+        method: str,
+        path: str,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        if not self.terminal_code or not self.secret_key:
+            raise LedgerError("Captura el código y la llave de la terminal para usar la API real.")
+        key = decode_secret(self.secret_key)
+        timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        nonce = str(uuid.uuid4())
+        canonical = canonical_payment_request(
+            self.terminal_code,
+            timestamp,
+            nonce,
+            path,
+            body,
+            method,
+        )
+        signature = hmac.new(key, canonical.encode("utf-8"), hashlib.sha256).hexdigest()
+        return self.request(
+            method,
+            path,
+            body,
+            {
+                "x-terminal-code": self.terminal_code,
+                "x-payment-timestamp": timestamp,
+                "x-payment-nonce": nonce,
+                "x-payment-hmac": signature,
+            },
+        )
+
+    def _validate_identity(self, value: dict[str, Any]) -> None:
+        backend_id = value.get("backendId")
+        if (
+            value.get("ok") is not True
+            or value.get("service") != REAL_SERVICE
+            or value.get("contract") != REAL_CONTRACT
+            or value.get("simulation") is not False
+            or not isinstance(backend_id, str)
+            or not backend_id
+            or not isinstance(value.get("environment"), str)
+            or not value["environment"]
+        ):
+            raise LedgerError("El servicio no es el backend real autorizado de Card Studio.")
+        if self.expected_backend_id and backend_id != self.expected_backend_id:
+            raise LedgerError(
+                f"Backend inesperado: {backend_id}. Se requiere {self.expected_backend_id}."
+            )
+
+    def health(self) -> dict[str, Any]:
+        value = self._signed_request("GET", REAL_HEALTH_PATH)
+        self._validate_identity(value)
+        if value.get("storage") != "postgresql":
+            raise LedgerError("El backend real no confirmó persistencia PostgreSQL.")
+        return value
+
+    def record(self, operation: Operation) -> dict[str, Any]:
+        value = self._signed_request("POST", REAL_OPERATION_PATH, operation.to_api())
+        self._validate_identity(value)
+        if value.get("status") != "RECORDED" or value.get("operationId") != operation.operation_id:
+            raise LedgerError("Swift Ledger no confirmó el registro real de la operación.")
         return value

@@ -17,7 +17,7 @@ from .model import CardError
 from .pcsc import create_pcsc_backend
 from .write_exercise import PRESERVED_APPLET_AID
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CAP = ROOT / "javacard-demo/build-coexistent/payment-demo.cap"
 DEFAULT_GP_JAR = ROOT / "vendor/GlobalPlatformPro-next/tool/target/gp.jar"
 PACKAGE_AID = "D4534C504D45"

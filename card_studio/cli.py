@@ -3,6 +3,7 @@ from __future__ import annotations
 from .card_session import CardSession
 from .globalplatform_registry import GlobalPlatformRegistryReader
 from .globalplatform_transport import GlobalPlatformTransport
+from .gppro_bibo import check_globalplatform_runtime
 from .pcsc import create_pcsc_backend
 from .registry_capture import capture_registry_in_process
 
@@ -15,11 +16,12 @@ from typing import Any
 from .application import CardStudioApplication as TransactionApplication
 from .backends import CardpeekBackend, SunmiBackend, VirtualCardBackend
 from .config import AppSettings, SettingsStore
-from .cardlab_adapter import DEFAULT_EVIDENCE, load_cardlab_status
+from .cardlab_adapter import load_cardlab_status
 from .registry_capture import (
     CONFIRMATION as REGISTRY_CONFIRMATION,
     DEFAULT_EVIDENCE as DEFAULT_REGISTRY_EVIDENCE,
     capture_registry,
+    load_registry_status,
 )
 from .host.base import HostError
 from .money import Money
@@ -29,7 +31,7 @@ from .diagnostics import collect_diagnostics
 from .dry_run import DryRunAdapter
 from .hardware_validation import HardwareValidator, choose_reader
 from .integration.physical import prepare_physical_session
-from .ledger import LedgerClient, LedgerError
+from .ledger import LedgerClient, LedgerError, RealLedgerClient
 from .model import CardError, parse_amount
 from .pairing import (
     AtomicEnvelopeStore,
@@ -80,8 +82,10 @@ def parser() -> argparse.ArgumentParser:
     hardware.add_argument("--scenario", default="aid1-selected")
     hardware.add_argument("--evidence", type=Path)
     commands.add_parser("physical-prepare")
+    globalplatform = commands.add_parser("globalplatform-status")
+    globalplatform.add_argument("--gp-jar", type=Path)
     cardlab = commands.add_parser("cardlab-status")
-    cardlab.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
+    cardlab.add_argument("--evidence", type=Path)
 
     registry = commands.add_parser("registry-status")
     registry.add_argument("--execute", action="store_true")
@@ -89,7 +93,6 @@ def parser() -> argparse.ArgumentParser:
     registry.add_argument(
         "--evidence",
         type=Path,
-        default=DEFAULT_REGISTRY_EVIDENCE,
     )
 
     transaction = commands.add_parser("transaction")
@@ -311,16 +314,21 @@ def main(argv: list[str]) -> int:
         if args.command == "diagnose":
             emit(collect_diagnostics(settings, check_api=args.check_api))
             return 0
+        if args.command == "globalplatform-status":
+            report = check_globalplatform_runtime(args.gp_jar)
+            emit(report)
+            return 0 if report["status"] == "PASS" else 2
         if args.command == "cardlab-status":
             report = load_cardlab_status(args.evidence)
             emit(report)
             return 0 if report["status"] == "PASS" else 2
 
         if args.command == "registry-status":
-            if (
-                not args.execute
-                or args.confirm_registry != REGISTRY_CONFIRMATION
-            ):
+            if not args.execute:
+                report = load_registry_status(args.evidence)
+                emit(report)
+                return 0 if report["status"] == "PASS" else 2
+            if args.confirm_registry != REGISTRY_CONFIRMATION:
                 emit({
                     "error": "REGISTRY_CONFIRMATION_REQUIRED",
                     "required_confirmation": REGISTRY_CONFIRMATION,
@@ -344,7 +352,7 @@ def main(argv: list[str]) -> int:
                 )
 
                 report = capture_registry_in_process(
-                    args.evidence,
+                    args.evidence or DEFAULT_REGISTRY_EVIDENCE,
                     registry_reader,
                     reader_name=settings.reader,
                 )
@@ -391,10 +399,13 @@ def main(argv: list[str]) -> int:
             emit(report)
             return 0 if report["status"] == "PREPARED" else 2
 
-        ledger = LedgerClient(
+        ledger_class = RealLedgerClient if settings.ledger_mode == "real" else LedgerClient
+        ledger_options = {"expected_backend_id": settings.ledger_backend_id} if settings.ledger_mode == "real" else {}
+        ledger = ledger_class(
             settings.ledger_url,
             settings.terminal_code,
             os.environ.get("SWIFT_LEDGER_TERMINAL_KEY", ""),
+            **ledger_options,
         )
         if args.command == "health":
             emit(ledger.health())

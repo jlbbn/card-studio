@@ -22,7 +22,7 @@ from .registry_capture import load_registry_status
 from .diagnostics import collect_diagnostics, format_diagnostics
 from .dry_run import DryRunAdapter
 from .hardware_validation import HardwareValidator, validation_summary
-from .ledger import LedgerClient, LedgerError
+from .ledger import LedgerClient, LedgerError, RealLedgerClient
 from .model import (
     CardError,
     CardState,
@@ -32,7 +32,7 @@ from .model import (
     validate_card_id,
 )
 from .pcsc import create_pcsc_backend
-from .write_exercise import run_exercise
+from .write_exercise import load_write_exercise_status
 from .service import CardStudioService
 from .startup import initialize_application
 from .store import JsonStore
@@ -222,14 +222,24 @@ class CardStudioWindow(Adw.ApplicationWindow):
         api_title = Gtk.Label(label="SWIFT LEDGER · API", xalign=0)
         api_title.add_css_class("caption-heading")
         sidebar.append(api_title)
-        self.api_url = self._entry("https://pos.ejemplo.local")
+        self.api_mode = Gtk.DropDown.new_from_strings([
+            "API real · VENUS privada",
+            "Sandbox POS · local",
+        ])
+        self.api_mode.set_selected(0 if self.settings.ledger_mode == "real" else 1)
+        self.api_mode.connect("notify::selected", lambda *_args: self._sync_widgets())
+        sidebar.append(self.api_mode)
+        self.api_url = self._entry("https://backend.privado")
         self.api_url.set_text(self.settings.ledger_url)
-        self.terminal_code = self._entry("Terminal Code sandbox")
+        self.api_backend_id = self._entry("Backend ID autorizado")
+        self.api_backend_id.set_text(self.settings.ledger_backend_id)
+        self.terminal_code = self._entry("Terminal Code")
         self.terminal_code.set_text(self.settings.terminal_code)
         self.terminal_key = self._entry("32-byte base64url key")
         self.terminal_key.set_visibility(False)
         for label, widget in [
             ("Swift Ledger URL", self.api_url),
+            ("Expected Backend ID · real", self.api_backend_id),
             ("Terminal Code", self.terminal_code),
             ("Terminal Key · not stored", self.terminal_key),
         ]:
@@ -737,6 +747,13 @@ class CardStudioWindow(Adw.ApplicationWindow):
         return CardpeekBackend()
 
     def _ledger(self) -> LedgerClient:
+        if self.api_mode.get_selected() == 0:
+            return RealLedgerClient(
+                self.api_url.get_text(),
+                self.terminal_code.get_text(),
+                self.terminal_key.get_text(),
+                self.api_backend_id.get_text(),
+            )
         return LedgerClient(
             self.api_url.get_text(),
             self.terminal_code.get_text(),
@@ -753,6 +770,9 @@ class CardStudioWindow(Adw.ApplicationWindow):
             sunmi_url=self.sunmi_url.get_text(),
             mode=mode,
             reader=self.reader_name.get_text(),
+            hardware_validation_enabled=self.settings.hardware_validation_enabled,
+            ledger_mode="real" if self.api_mode.get_selected() == 0 else "sandbox",
+            ledger_backend_id=self.api_backend_id.get_text(),
         )
 
     def _save_settings(self) -> None:
@@ -792,6 +812,7 @@ class CardStudioWindow(Adw.ApplicationWindow):
         self.transport.set_visible(physical)
         self.sunmi_url.set_visible(physical and selected == 0)
         self.reader_name.set_visible(physical and selected == 1)
+        self.api_backend_id.set_visible(self.api_mode.get_selected() == 0)
         notes = {
             0: "SUNMI: open Card Bridge and run\nadb forward tcp:5380 tcp:5380",
             1: "PC/SC nativo. Deja el lector en blanco para usar el primero.",
@@ -991,6 +1012,7 @@ class CardStudioWindow(Adw.ApplicationWindow):
                 f"Auth signal:     {report['authentication_signal']}\n"
                 f"Secret stored:   {report['authentication_secret_recorded']}\n\n"
                 f"Captured: {report.get('captured_at') or 'N/A'}\n"
+                f"Scope: {report.get('evidence_scope', 'HISTORICAL_RECORD')}\n"
                 f"Evidence: {report['source_evidence']}"
             )
 
@@ -1003,33 +1025,14 @@ class CardStudioWindow(Adw.ApplicationWindow):
 
 
     def _show_write_validation(self) -> None:
-        reader = self.reader_name.get_text().strip()
-
-        if not reader:
-            reader = "Alcor Micro AU9540 00 00"
-
-        evidence_path = Path(
-            "release/1.2.0/evidence/write-exercise-5969-restore-5968.json"
-        )
-
-        def work() -> dict[str, Any]:
-            backend = create_pcsc_backend(
-                platform="linux",
-                reader_name=reader,
-            )
-
-            return run_exercise(
-                backend,
-                confirm_write=True,
-                evidence_path=evidence_path,
-            )
-
         def success(report: dict[str, Any]) -> None:
             postflight = report.get("postflight") or {}
 
             body = (
                 f"Result:                  {report['result']}\n"
-                f"Physical validation:     {report['physical_validation']}\n\n"
+                f"Physical validation:     {report['physical_validation']}\n"
+                f"Evidence scope:          {report['evidence_scope']}\n"
+                f"Captured:                {report['timestamp']}\n\n"
                 f"Applet AID:              {report['applet_aid']}\n"
                 f"Preserved AID:           {report['preserved_applet_aid']}\n\n"
                 f"Write commands accepted: {report['write_commands_accepted']}\n"
@@ -1041,11 +1044,11 @@ class CardStudioWindow(Adw.ApplicationWindow):
             )
 
             self._present_report_window(
-                'JavaCard Write Validation · 4601',
+                'JavaCard Write Validation · Evidence',
                 body,
             )
 
-        self._run_async(work, success)
+        self._run_async(load_write_exercise_status, success)
 
     def _show_cardlab(self) -> None:
         def success(report: dict[str, Any]) -> None:
@@ -1069,6 +1072,8 @@ class CardStudioWindow(Adw.ApplicationWindow):
                 f"GET_STATUS:      {physical['get_status']}\n"
                 f"READ_CONTAINER:  {physical['read_container']}\n\n"
                 f"Reader: {report.get('reader') or 'N/A'}\n"
+                f"Captured: {report.get('captured_at') or 'N/A'}\n"
+                f"Scope: {report.get('evidence_scope', 'HISTORICAL_RECORD')}\n"
                 f"Evidence: {report['source_evidence']}"
             )
 
@@ -1970,7 +1975,7 @@ class CardStudioWindow(Adw.ApplicationWindow):
             self._render_state(state)
             self._render_history()
             if operation.api_status == "RECORDED":
-                self._toast("Operación y registro sandbox completados")
+                self._toast(operation.api_message)
             else:
                 self._toast(f"Operación local guardada; API pendiente: {operation.api_message}")
 
@@ -1978,8 +1983,15 @@ class CardStudioWindow(Adw.ApplicationWindow):
 
     def _check_api(self) -> None:
         def success(value: dict[str, Any]) -> None:
-            self.api_status.set_text(f"API sandbox disponible · {value.get('serverTime', '')}")
-            self._toast("Conexión con Swift Ledger confirmada")
+            if value.get("simulation") is False:
+                identity = f"{value.get('service')} · {value.get('backendId')} · {value.get('environment')}"
+                self.api_status.set_text(f"API REAL · {identity}\n{value.get('serverTime', '')}")
+                self._toast(f"Backend real confirmado: {value.get('backendId')}")
+            else:
+                self.api_status.set_text(
+                    f"API SANDBOX · {value.get('service', 'POS local')} · {value.get('serverTime', '')}"
+                )
+                self._toast("Conexión sandbox confirmada; no es el backend real")
 
         self._run_async(self._ledger().health, success)
 

@@ -46,13 +46,16 @@ class CardStudioService:
 
     def _record(self, operation: Operation, ledger: LedgerClient) -> None:
         try:
-            ledger.record(operation)
+            response = ledger.record(operation)
         except LedgerError as error:
             operation.api_message = str(error)
             logger.warning("Operación %s pendiente de API: %s", operation.operation_id, error)
         else:
             operation.api_status = "RECORDED"
-            operation.api_message = "Registrado en Swift Ledger sandbox"
+            operation.api_message = (
+                "Registrado en Swift Ledger sandbox" if response.get("simulation") is True
+                else f"Registrado en API real · {response.get('backendId', '')}"
+            )
         self.store.update_operation(operation)
 
     def sync_pending(self, ledger: LedgerClient) -> tuple[int, str]:
@@ -62,7 +65,7 @@ class CardStudioService:
             if operation.api_status == "RECORDED":
                 continue
             try:
-                ledger.record(operation)
+                response = ledger.record(operation)
             except LedgerError as error:
                 operation.api_message = str(error)
                 self.store.update_operation(operation)
@@ -70,7 +73,10 @@ class CardStudioService:
                 logger.warning("Sincronización pendiente detenida: %s", error)
                 break
             operation.api_status = "RECORDED"
-            operation.api_message = "Registrado en Swift Ledger sandbox"
+            operation.api_message = (
+                "Registrado en Swift Ledger sandbox" if response.get("simulation") is True
+                else f"Registrado en API real · {response.get('backendId', '')}"
+            )
             self.store.update_operation(operation)
             recorded += 1
         return recorded, last_error

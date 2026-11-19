@@ -1,6 +1,8 @@
 import json
+import os
 
 import unittest
+from unittest.mock import patch
 
 from card_studio.cardlab_adapter import load_cardlab_status
 from card_studio.model import CardError
@@ -39,6 +41,26 @@ def test_cardlab_confirmed(tmp_path):
     assert result["state"] == "PHYSICALLY_CONFIRMED"
     assert result["applet_aid"] == "D4534C504D4701"
     assert result["physically_confirmed"] is True
+
+
+def test_cardlab_uses_portable_evidence_directory(tmp_path):
+    path = tmp_path / "Evidence" / "cardlab" / "validate-all.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(valid_evidence()))
+    with patch.dict(os.environ, {"CARD_STUDIO_DATA_DIR": str(tmp_path)}):
+        result = load_cardlab_status()
+    assert result["source_evidence"] == str(path)
+    assert result["evidence_scope"] == "HISTORICAL_RECORD"
+
+
+def test_cardlab_missing_evidence_is_explicit(tmp_path):
+    path = tmp_path / "missing.json"
+    with patch.dict(os.environ, {"CARD_STUDIO_CARDLAB_EVIDENCE": str(path)}):
+        with unittest.TestCase().assertRaises(CardError) as caught:
+            load_cardlab_status()
+    assert caught.exception.code == "CARDLAB_EVIDENCE_NOT_FOUND"
+    assert str(path) in caught.exception.message
+    assert "No se ejecutó" in caught.exception.message
 
 
 def test_cardlab_rejects_wrong_aid(tmp_path):

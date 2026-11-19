@@ -1,10 +1,10 @@
-name: Build Card Studio macOS 1.2.2
+name: Build Card Studio macOS 1.2.3 (build 2)
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - macos-1.2.2-ci
+      - card-studio-1.2.3-real-api
 
 permissions:
   contents: read
@@ -14,6 +14,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify macOS arm64 runner
+        run: test "$(uname -m)" = "arm64"
 
       - uses: actions/setup-java@v4
         with:
@@ -25,19 +28,21 @@ jobs:
           export HOMEBREW_NO_AUTO_UPDATE=1
           brew install python pkg-config gobject-introspection pygobject3 gtk4 libadwaita swig
 
-      - name: Install runner-only test dependency
+      - name: Install runner test dependencies including JPype
         run: |
           BREW_PYTHON="$(brew --prefix python)/bin/python3"
           VENV=".venv-macos-$(uname -m)"
           "$BREW_PYTHON" -m venv --system-site-packages "$VENV"
-          "$VENV/bin/pip" install pytest jpype1
+          "$VENV/bin/pip" install pytest -r requirements.txt
+          "$VENV/bin/python" -c 'import jpype; print("JPype", jpype.__version__)'
+          java -version
 
-      - name: Place Java test fixture at the inherited path
+      - name: Verify GlobalPlatform runtime in development
         run: |
-          TARGET="$GITHUB_WORKSPACE/../vendor/GlobalPlatformPro-next/tool/target/gp.jar"
-          mkdir -p "$(dirname "$TARGET")"
-          cp vendor/GlobalPlatformPro-next/tool/target/gp.jar "$TARGET"
-          printf '%s  %s\n' '49bc6c6c009420a0ba70c2305cdd5e80c7ad89152f35a333f6d25d57cfcc8e1c' "$TARGET" | shasum -a 256 -c -
+          set -euo pipefail
+          VENV=".venv-macos-$(uname -m)"
+          mkdir -p "$PWD/artifacts" "$PWD/runner-home"
+          HOME="$PWD/runner-home" "$VENV/bin/python" -m card_studio --cli globalplatform-status > "$PWD/artifacts/globalplatform-status-development.json"
 
       - name: Run complete pytest regression
         run: .venv-macos-$(uname -m)/bin/python -m pytest -q tests
@@ -53,14 +58,39 @@ jobs:
           APP="$DIST/Swift Ledger Card Studio.app"
           EXECUTABLE="$APP/Contents/MacOS/Swift Ledger Card Studio"
           OUT="$PWD/artifacts"
-          DMG="Card-Studio-1.2.2-PACO-macOS.dmg"
-          ZIP="Card-Studio-1.2.2-PACO-macOS.zip"
+          DMG="Card-Studio-1.2.3-PACO-macOS.dmg"
+          ZIP="Card-Studio-1.2.3-PACO-macOS.zip"
           mkdir -p "$OUT" "$PWD/runner-home"
 
           VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
-          test "$VERSION" = "1.2.2"
+          BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist")"
+          test "$VERSION" = "1.2.3"
+          test "$BUILD" = "2"
           codesign --verify --deep --strict --verbose=2 "$APP"
           codesign -dv --verbose=4 "$APP" 2> "$OUT/codesign.txt"
+
+          HOME="$PWD/runner-home" "$EXECUTABLE" --cli globalplatform-status > "$OUT/globalplatform-status-app.json"
+          python3 - "$APP" "$OUT/globalplatform-status-app.json" <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+
+          app = Path(sys.argv[1]).resolve()
+          report = json.loads(Path(sys.argv[2]).read_text())
+          assert report["status"] == "PASS", report
+          assert report["jpype"]["imported"] is True, report
+          assert report["jvm"]["started"] is True, report
+          assert report["classes"] == {
+              "apdu4j.core.BIBO": True,
+              "pro.javacard.gptool.GPTool": True,
+          }, report
+          assert report["pcsc"] == "NOT_OPENED", report
+          assert report["apdus"] == "NOT_SENT", report
+          gp_jar = Path(report["gp_jar"]["path"]).resolve()
+          gp_jar.relative_to(app)
+          assert gp_jar.is_file(), gp_jar
+          print(f"GLOBALPLATFORM_APP=PASS GP_JAR={gp_jar}")
+          PY
 
           HOME="$PWD/runner-home" "$EXECUTABLE" --cli diagnose > "$OUT/diagnose.txt"
           HOME="$PWD/runner-home" "$EXECUTABLE" --cli hardware-validation --dry-run --evidence "$OUT/dry-run-evidence.json" > "$OUT/dry-run.json"
@@ -76,15 +106,16 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUT/$ZIP"
           unzip -t "$OUT/$ZIP"
 
-          python3 - "$OUT/build-info.json" "$VERSION" "$ARCH" <<'PY'
+          python3 - "$OUT/build-info.json" "$VERSION" "$BUILD" "$ARCH" <<'PY'
           import json
           import os
           import sys
 
-          path, version, arch = sys.argv[1:]
+          path, version, build, arch = sys.argv[1:]
           with open(path, "w") as handle:
               json.dump({
                   "version": version,
+                  "build": int(build),
                   "architecture": arch,
                   "source_commit": os.environ["GITHUB_SHA"],
                   "github_run_id": os.environ["GITHUB_RUN_ID"],
@@ -101,7 +132,7 @@ jobs:
       - name: Upload macOS installers
         uses: actions/upload-artifact@v4
         with:
-          name: card-studio-1.2.2-macos
+          name: Card-Studio-1.2.3-PACO-macOS
           path: artifacts/
           if-no-files-found: error
           retention-days: 7

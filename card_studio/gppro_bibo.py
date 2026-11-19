@@ -1,10 +1,117 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 
 from .card_session import CardSession
 from .model import CardError
+
+
+GP_JAR_RELATIVE_PATH = Path(
+    "vendor/GlobalPlatformPro-next/tool/target/gp.jar"
+)
+REQUIRED_JAVA_CLASSES = (
+    "apdu4j.core.BIBO",
+    "pro.javacard.gptool.GPTool",
+)
+
+
+def resolve_gp_jar(gp_jar: str | Path | None = None) -> Path:
+    if gp_jar is not None:
+        return Path(gp_jar).expanduser().resolve()
+
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    root = (
+        Path(bundle_root)
+        if bundle_root
+        else Path(__file__).resolve().parents[1]
+    )
+    return (root / GP_JAR_RELATIVE_PATH).resolve()
+
+
+def check_globalplatform_runtime(
+    gp_jar: str | Path | None = None,
+) -> dict[str, Any]:
+    jar = resolve_gp_jar(gp_jar)
+    jar_exists = jar.is_file()
+    report = {
+        "status": "FAIL",
+        "gp_jar": {
+            "path": str(jar),
+            "exists": jar_exists,
+        },
+        "jpype": {
+            "imported": False,
+            "version": None,
+        },
+        "jvm": {
+            "started": False,
+            "already_started": False,
+            "started_by_check": False,
+        },
+        "classes": {
+            name: False
+            for name in REQUIRED_JAVA_CLASSES
+        },
+        "physical_validation": "NOT_EXECUTED",
+        "pcsc": "NOT_OPENED",
+        "apdus": "NOT_SENT",
+        "errors": [],
+    }
+
+    if not jar_exists:
+        report["errors"].append({
+            "code": "GPPRO_JAR_NOT_FOUND",
+            "message": f"No existe gp.jar: {jar}",
+        })
+        return report
+
+    try:
+        import jpype
+    except Exception as error:
+        report["errors"].append({
+            "code": "JPYPE_IMPORT_FAILED",
+            "message": str(error),
+        })
+        return report
+
+    report["jpype"] = {
+        "imported": True,
+        "version": str(getattr(jpype, "__version__", "UNKNOWN")),
+    }
+
+    try:
+        already_started = bool(jpype.isJVMStarted())
+        report["jvm"]["already_started"] = already_started
+        if not already_started:
+            jpype.startJVM(classpath=[str(jar)])
+            report["jvm"]["started_by_check"] = True
+        if not jpype.isJVMStarted():
+            raise RuntimeError("JPype no confirmó el arranque de la JVM.")
+        report["jvm"]["started"] = True
+    except Exception as error:
+        report["errors"].append({
+            "code": "JVM_START_FAILED",
+            "message": str(error),
+        })
+        return report
+
+    for name in REQUIRED_JAVA_CLASSES:
+        try:
+            jpype.JClass(name)
+        except Exception as error:
+            report["errors"].append({
+                "code": "JAVA_CLASS_LOAD_FAILED",
+                "class": name,
+                "message": str(error),
+            })
+        else:
+            report["classes"][name] = True
+
+    if not report["errors"]:
+        report["status"] = "PASS"
+    return report
 
 
 class GPProBIBOBridge:

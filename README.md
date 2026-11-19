@@ -2,7 +2,7 @@
 
 **Definición objetivo:** estación de personalización y aprovisionamiento de Java Cards propias. Card Studio controla perfiles, applet, identidad, personalización, read-back, registro, tokenización, activación y evidencia auditable. **Card Bridge es únicamente la capa de transporte y abstracción entre Card Studio y el hardware físico**, no un producto independiente.
 
-**Estado actual:** la baseline conserva tarjetas virtuales y propias Swift Ledger, recargas y cobros **sandbox**, historial local y sincronización con una API que exige `simulation=true`. No procesa PAN, CVV, EMV ni fondos reales. El frente Java Card está preparado para validación física, pero el Instance AID continúa `UNRESOLVED` y no existe evidencia de personalización física real.
+**Estado actual:** la versión 1.2.3 distingue la API real privada de VENUS (`simulation=false`, PostgreSQL e identidad fijada) del POS sandbox (`simulation=true`). Conserva tarjetas virtuales y propias Swift Ledger, recargas y cobros de demostración, historial local y sincronización. El registro en la API real no representa captura ni movimiento de fondos. No procesa PAN, CVV ni EMV. El frente Java Card está preparado para validación física, pero el Instance AID continúa `UNRESOLVED` y no existe evidencia de personalización física real.
 
 La arquitectura de transición y los 18 entregables iniciales están en [docs/JAVA_CARD_PERSONALIZATION.md](docs/JAVA_CARD_PERSONALIZATION.md).
 
@@ -17,7 +17,7 @@ La arquitectura de transición y los 18 entregables iniciales están en [docs/JA
 - `card_studio/model.py`: validaciones, saldo MXN y contrato APDU legacy del applet propio.
 - `card_studio/service.py`: operaciones, auditoría e idempotencia sandbox.
 - `card_studio/backends.py`: tarjeta virtual, Cardpeek y puente SUNMI.
-- `card_studio/ledger.py`: API sandbox y firma HMAC.
+- `card_studio/ledger.py`: clientes real y sandbox separados, firma HMAC e identidad de backend.
 - `card_studio/app.py` / `cli.py`: interfaz gráfica y línea de comandos.
 - `card_studio/config.py`: configuración no secreta versión 2 con permisos `0600`.
 
@@ -43,7 +43,7 @@ Las operaciones se guardan localmente. Sin API o credenciales quedan como `PENDI
 
 ## macOS
 
-Versión actual: **1.2.0, build 1**. La guía de ejecución y compilación está en [docs/MACOS.md](docs/MACOS.md). El paquete usa PyInstaller y no exige Python al usuario final. Se preparan DMG nativos separados para `arm64` y `x86_64`; no se genera un universal artificial porque `pyscard` es nativo.
+Versión actual: **1.2.3, build 2**. La guía de ejecución y compilación está en [docs/MACOS.md](docs/MACOS.md). El paquete usa PyInstaller y no exige Python al usuario final. Se preparan DMG nativos separados para `arm64` y `x86_64`; no se genera un universal artificial porque `pyscard` es nativo.
 
 El `.app` y el `.dmg` deben generarse en una Mac. Un script creado en Linux no demuestra que exista un instalador macOS válido.
 
@@ -71,18 +71,22 @@ Sin lector, el resultado correcto es `HARDWARE_NOT_CONNECTED` y `PHYSICAL_VALIDA
 
 La evidencia se guarda en la carpeta de datos del usuario, nunca dentro del `.app`. En macOS: `~/Library/Application Support/Swift Ledger Card Studio/Evidence/applet-validation/`.
 
+CardLab, Registry y Write Validation cargan evidencias históricas desde `Evidence/cardlab`, `Evidence/globalplatform` y `Evidence/write-validation`, con fallback a las rutas legacy de VENUS y overrides `CARD_STUDIO_CARDLAB_EVIDENCE`, `CARD_STUDIO_REGISTRY_EVIDENCE` y `CARD_STUDIO_WRITE_EVIDENCE`. La interfaz identifica fecha y origen. Write Validation no ejecuta el ejercicio físico: sólo muestra el resultado registrado, incluidos FAIL e INCONCLUSIVE.
+
+GlobalPlatform incluye JPype y `gp.jar` en el bundle. La JVM externa compatible sigue siendo necesaria; en macOS arm64 se recomienda JDK 17 arm64. `--cli globalplatform-status` verifica JAR, JPype, JVM y clases Java sin abrir PC/SC ni enviar APDUs.
+
 ## Configuración segura de Swift Ledger
 
-En la interfaz usa **Guardar configuración no secreta**. Solo se guardan URL, código de terminal, transporte, lector y preferencias no secretas de hardware. La llave de terminal nunca se guarda en `settings.json` ni se incluye en el APP/DMG. Las preferencias versión 1 se migran conservando valores compatibles y añaden las opciones de hardware de la versión 2.
+En la interfaz usa **Guardar configuración no secreta**. Solo se guardan URL, modo de API, Backend ID, código de terminal, transporte, lector y preferencias no secretas de hardware. La llave de terminal nunca se guarda en `settings.json` ni se incluye en el APP/DMG. La configuración versión 2 incorpora los campos de API y migra el antiguo valor local `127.0.0.1:5300` a la API real privada de VENUS; el sandbox POS sigue disponible como modo explícito y nunca se presenta como backend real.
 
 Por CLI:
 
 ```bash
-export SWIFT_LEDGER_TERMINAL_KEY='<llave-base64url-sandbox>'
-./run.sh --cli --ledger-url https://pos.sandbox.invalid --terminal-code SANDBOX-TEST health
+export SWIFT_LEDGER_TERMINAL_KEY='<llave-base64url-de-terminal>'
+./run.sh --cli --ledger-url http://admin1-venus-series.tail7dc5a9.ts.net:5200 --terminal-code VENUS-MAC-001 health
 ```
 
-Las URL con usuario/contraseña, parámetros o fragmentos se rechazan. HTTP se conserva para POS local/LAN; para un servicio remoto utiliza HTTPS.
+Las URL con usuario/contraseña, parámetros o fragmentos se rechazan. HTTP se conserva para POS local/LAN y para la IP/DNS de Tailscale, donde WireGuard proporciona el canal cifrado; fuera de un túnel privado, un servicio remoto requiere HTTPS.
 
 ## NFC y diagnóstico
 

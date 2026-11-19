@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from .hardware_validation import choose_reader, write_evidence
 from .java_card_writer import JavaCardWriter, apdu_bytes
 from .model import CardError
 from .pcsc import create_pcsc_backend
+from .system import data_directory
 
 APPLET_AID = "D4534C504D4601"
 PRESERVED_APPLET_AID = "D4534C504D4401"
@@ -287,6 +289,69 @@ def run_exercise(
     if evidence_path is not None:
         write_evidence(Path(evidence_path), report)
         report["evidence_path"] = str(evidence_path)
+    return report
+
+
+def default_write_evidence() -> Path:
+    return data_directory() / "Evidence" / "write-validation" / "write-exercise-5969-restore-5968.json"
+
+
+def legacy_write_evidence() -> Path:
+    return (
+        Path.home()
+        / "payment"
+        / "card-studio"
+        / "release"
+        / "1.2.0"
+        / "evidence"
+        / "write-exercise-5969-restore-5968.json"
+    )
+
+
+def resolve_write_evidence(evidence_path: Path | None = None) -> Path:
+    if evidence_path is not None:
+        return Path(evidence_path)
+    configured = os.environ.get("CARD_STUDIO_WRITE_EVIDENCE")
+    if configured:
+        return Path(configured).expanduser()
+    primary = default_write_evidence()
+    legacy = legacy_write_evidence()
+    return legacy if not primary.is_file() and legacy.is_file() else primary
+
+
+def load_write_exercise_status(evidence_path: Path | None = None) -> dict[str, Any]:
+    path = resolve_write_evidence(evidence_path)
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as error:
+        raise CardError(
+            "WRITE_EVIDENCE_NOT_FOUND",
+            f"No existe evidencia Write Validation: {path}. No se ejecutó escritura ni lectura física.",
+        ) from error
+    except json.JSONDecodeError as error:
+        raise CardError("WRITE_EVIDENCE_INVALID", "La evidencia Write Validation no contiene JSON válido.") from error
+    required = {
+        "schema_version": 1,
+        "exercise": "WRITE_5969_READBACK_RESTORE_5968_READBACK_VERIFY_PRESERVED",
+    }
+    if not isinstance(document, dict) or any(document.get(key) != value for key, value in required.items()):
+        raise CardError("WRITE_EVIDENCE_INVALID", "La evidencia Write Validation usa un esquema inesperado.")
+    fields = {
+        "timestamp", "mode", "applet_aid", "preserved_applet_aid", "result",
+        "physical_validation", "physical_write_attempted", "write_commands_accepted",
+        "write_executed", "container_state", "postflight",
+    }
+    if fields.difference(document) or document["mode"] not in {"PHYSICAL", "SIMULATED"}:
+        raise CardError("WRITE_EVIDENCE_INVALID", "La evidencia Write Validation está incompleta.")
+    if document.get("physical_validation") == "PASS" and (
+        document["mode"] != "PHYSICAL"
+        or document.get("result") != "PASS"
+        or document.get("write_executed") is not True
+    ):
+        raise CardError("WRITE_EVIDENCE_INVALID", "La evidencia Write Validation contiene un PASS inconsistente.")
+    report = dict(document)
+    report["evidence_path"] = str(path)
+    report["evidence_scope"] = "HISTORICAL_RECORD"
     return report
 
 
